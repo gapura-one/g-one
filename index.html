@@ -2081,10 +2081,10 @@ const ACCS=[
 {id:"kc",type:"bud",email:"kc@gapura.simulasi",nama:"IWAN SETIAWAN",jab:"BUDGETING & FINANCE GROUP HEAD - KPS",tel:"0811-1015-2026",pass:PASS},
  {id:"pgd",type:"pgd",email:"pengadaan@gapura.simulasi",nama:"MAYA ANGGRAINI",jab:"PROCUREMENT GROUP HEAD - KPS",tel:"0811-1002-2026",pass:PASS},
  {id:"sekdir",type:"sekdir",email:"sekdir@gapura.simulasi",nama:"LARAS PUSPITASARI",jab:"SEKRETARIS DIREKSI - KPS",tel:"0811-1003-2026",pass:PASS},
- {id:"dir",type:"dir",email:"direksi@gapura.simulasi",nama:"DIREKSI (SIMULASI)",jab:"DIREKTUR - KPS",tel:"0811-1004-2026",pass:PASS},
+ {id:"dir",type:"dir",email:"du@gapura.simulasi",nama:"DIREKTUR UTAMA (SIMULASI)",jab:"DIREKTUR UTAMA",tel:"0811-1004-2026",pass:PASS},
  {id:"dir-keu",type:"dir",email:"dk@gapura.simulasi",nama:"DAULAT MUSA",jab:"DIREKTUR KEUANGAN & MANAJEMEN RISIKO",tel:"0811-1011-2026",pass:PASS},
  {id:"dir-ops",type:"dir",email:"do@gapura.simulasi",nama:"CAPT. RULI WIJAYA",jab:"DIREKTUR OPERASI",tel:"0811-1012-2026",pass:PASS},
- {id:"dir-hc",type:"dir",email:"dhc@gapura.simulasi",nama:"AA MADE HARDIKA",jab:"DIREKTUR HUMAN CAPITAL",tel:"0811-1013-2026",pass:PASS},
+ {id:"dir-hc",type:"dir",email:"dh@gapura.simulasi",nama:"AA MADE HARDIKA",jab:"DIREKTUR HUMAN CAPITAL",tel:"0811-1013-2026",pass:PASS},
  {id:"dir-kom",type:"dir",email:"dc@gapura.simulasi",nama:"DENNY PERDANA WIRAWAN",jab:"DIREKTUR KOMERSIAL",tel:"0811-1014-2026",pass:PASS},
  {id:"sa",type:"sa",email:"superadmin@gapura.simulasi",nama:"SUPERADMIN G-ONE",jab:"ADMINISTRATOR SISTEM",tel:"0811-1005-2026",pass:PASS}];
 /* develop_8/12: approver nota dinas cabang — MK (Manager of Finance) / MI (Manager of Administration & Finance) → GM */
@@ -2143,7 +2143,7 @@ const accUnitTxt=a=>a.type==="cab"?`Cabang ${a.cab} — ${CAB[a.cab][0]}`:a.unit
 const DIRP=[...Object.keys(CAB).filter(c=>c!=="KPS").map(c=>"cab:"+c),...Object.keys(UNITS).map(u=>"ppja:"+u),"bud","pgd","sekdir","dir","sa"];
 function plabel(id){const [t,k]=id.split(":");if(t==="cab")return (k==="KPS"?"GROUP HEAD":"GENERAL MANAGER")+" - "+k;if(t==="ppja")return `PPJA ${k} — ${UNITS[k].nama}`;
  return {bud:"BUDGETING DIVISION HEAD - KPS",pgd:"PROCUREMENT GROUP HEAD - KPS",sekdir:"SEKRETARIS DIREKSI - KPS",dir:"DIREKSI / PIMPINAN",sa:"SUPERADMIN G-ONE"}[id]||id;}
-function pmail(id){const [t,k]=id.split(":");return t==="cab"?`gm.${k.toLowerCase()}@gapura.simulasi`:t==="ppja"?`ppja.${k.toLowerCase()}@gapura.simulasi`:{bud:"budgeting",pgd:"pengadaan",sekdir:"sekdir",dir:"direksi",sa:"superadmin"}[id]+"@gapura.simulasi";}
+function pmail(id){const [t,k]=id.split(":");return t==="cab"?`gm.${k.toLowerCase()}@gapura.simulasi`:t==="ppja"?`ppja.${k.toLowerCase()}@gapura.simulasi`:{bud:"budgeting",pgd:"pengadaan",sekdir:"sekdir",dir:"du",sa:"superadmin"}[id]+"@gapura.simulasi";}
 function pshort(id){const [t,k]=id.split(":");return t==="cab"||t==="ppja"?k:{bud:"BUD",pgd:"PGD",sekdir:"SEKDIR",dir:"DIR",sa:"SA"}[id]||id;}
 const isCore=(p,me)=>me===origP(p)||me==="ppja:"+p.unit;
 
