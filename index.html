@@ -1571,6 +1571,12 @@ h1,h2,h3,#vTitle,.fmh b,.nph b,.kph b,.sxh,.idh,.stp b,.lsec,.ttl2,.card>h3{font
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .vin>.fmod,.vin>.modal,.vin>[id$="M"]{animation:none!important}
 .lgbtn{position:relative;overflow:hidden}
+
+.sdmt .ekxr td{background:#f6faf6;font-size:12px;color:#334}.sdmt .ekxr td:nth-child(2){font-weight:600;color:#556}
+.sdmt .ekx small{display:block;font-size:10px;color:#778;font-weight:400;line-height:1.25}.sdmt .ekxm{color:#c0392b;font-style:italic;font-size:11px}
+.sdmt th.eksel{background:#1f7a3a!important;color:#fff!important}.sdmt td.eksel{background:#e9f6ec}
+@keyframes ekfl{0%{box-shadow:inset 0 0 0 2px rgba(31,122,58,.55)}100%{box-shadow:inset 0 0 0 2px rgba(31,122,58,0)}}.sdmt .ekfl{animation:ekfl .7s ease-out}
+@media (prefers-reduced-motion:reduce){.sdmt .ekfl{animation:none}}
 </style>
 </head>
 <body>
@@ -4728,7 +4734,7 @@ function docNotif(p,i,nm,old,name){const n=new Date(),who=`PPJA ${p.unit} — ${
 
 /* ===== input: Form Verifikasi grid (#3) & EE SDM otomatis (#8) ===== */
 function sdmEERefresh(){const w=document.querySelector(".sdmt .tw"),h=document.querySelector(".sdmt .idh");if(!w||!F)return;
- w.innerHTML=ekMulti(sdmCols(F.items),true,"F",{qty:1,th:F.form.tahun});}
+ w.innerHTML=sdmEEForm();}
 onInp8=(o=>function(e,t,ds){
  if(ds.it!==undefined&&F){const i=+ds.it,it=F.items[i];
   if(F.j==="gse"&&it){if(ds.ik==="pnM"||ds.ik==="pnO"){it[ds.ik]=UP(t.value);const m=it.pnM==="-"?"":it.pnM;it.pn=m||it.pnO||(it.pnM==="-"?"-":"");it.pnk=it.pnO&&!m?"OEM":"MANUAL";}
@@ -4879,13 +4885,13 @@ function sdmMaster(J){const n=F.items.length;let s=F.sdmSel??0;if(s>=n)s=n-1;F.s
   <div class="idocs"><div class="idh">Kelengkapan Dokumen — Checklist PPJA ${F.unit}${it.ust?" · UST "+it.ust:""}</div>${defs.map(d=>itemDocRow(d,it,i)).join("")}${attBlock(it.extra,!!F.xo[i],i,`data-xup="${i}"`,"xRm","xSample")}</div></div></div>`;}
 rincBlockSdm=(o=>function(J){const h=o(J),a=h.indexOf('<div class="sdmt">');if(a<0)return h;const top=h.slice(0,a);
  const tot=`<div class="tot" style="margin-top:12px"><span>Total draft usulan EE per bulan (${F.items.length} fungsi · ${fmt(F.items.reduce((x,b)=>x+(+b.qty||0),0))} orang)</span><b id="itemTot">${rp(F.items.reduce((x,b)=>x+iTot(b),0))}</b></div>`;
- return top+`<div class="idh" style="margin:14px 0 6px">Data Fungsi / Jabatan &amp; Kelengkapan Dokumen</div>`+sdmMaster(J)+`<div class="sdmt" style="margin-top:16px"><div class="idh">Usulan Engineering Estimate</div><div class="tw">${ekMulti(sdmCols(F.items),true,"F",{qty:1,th:F.form.tahun})}</div></div>`+tot;})(rincBlockSdm);
+ return top+`<div class="idh" style="margin:14px 0 6px">Data Fungsi / Jabatan &amp; Kelengkapan Dokumen</div>`+sdmMaster(J)+`<div class="sdmt" style="margin-top:16px"><div class="idh">Usulan Engineering Estimate</div><div class="tw">${sdmEEForm()}</div></div>`+tot;})(rincBlockSdm);
 onAct8=(o=>function(act,a){
  if(act==="sdmSel"){F.sdmSel=+a.dataset.i;renderAjukan();return true;}
  if(act==="addItem"&&F&&isSdmJ(F.j)){const r=o(act,a);setTimeout(()=>{if(F.sdmSel!==F.items.length-1){F.sdmSel=F.items.length-1;renderAjukan();}},0);return r;}
  return o(act,a);})(onAct8);
 onInp8=(o=>function(e,t,ds){if(ds.it!==undefined&&F&&isSdmJ(F.j)){const i=+ds.it,it=F.items[i];if(it){
-  if(ds.ik==="ust"){it.ust=t.value;sdmSyncUst();if(e.type==="change")setTimeout(renderAjukan,0);return true;}
+  if(ds.ik==="ust"){it.ust=t.value;sdmSyncUst();setTimeout(sdmEERefresh,0);if(e.type==="change")setTimeout(renderAjukan,0);return true;}
   setTimeout(()=>{const nE=$("#sdcn"+i),qE=$("#sdcq"+i);if(nE)nE.textContent=`${i+1}. ${tCase(it.uraian||"Fungsi baru")}`;if(qE)qE.textContent=`Jumlah SDM: ${fmt(+it.qty||0)} orang${it.ust?" · UST "+it.ust:""}`;},0);}}
  return o(e,t,ds);})(onInp8);
 checkF=(o=>function(){const r=o();if(F&&isSdmJ(F.j)&&!F.revOf){sdmSyncUst();r.E=r.E.filter(e=>!/UST terkait/i.test(e.m));F.items.forEach((it,i)=>{r.tot++;if(!it.ust)r.E.push({m:`Fungsi ${i+1}: UST terkait belum dipilih`,key:`it:${i}:ust`});});}return r;})(checkF);
@@ -5010,6 +5016,21 @@ goView=(o=>function(v,k){const prev=VIEW;o(v,k);const el=document.getElementById
 /* ===== Data dummy dikosongkan: sisa 2 pengajuan (SDM cabang CGK & OT cabang SUB) ===== */
 DATA=DATA.filter(p=>["GONE-2026-0151","GONE-2026-0140"].includes(p.id));
 PAGU.length=0;FDSEED=true;FDR.length=0;
+
+/* ===== Form SDM: isian Data Fungsi/Jabatan tersambung live ke tabel Usulan EE di bawahnya ===== */
+function sdmEEForm(){const its=F.items,sel=F.sdmSel??0;let h=ekMulti(sdmCols(its),true,"F",{qty:1,th:F.form.tahun});if(!h)return h;
+ let k=0;h=h.replace(/<th class="num ekch">/g,()=>`<th class="num ekch${k++===sel?" eksel":""}" data-sdmc="${k-1}">`);
+ const cell=f=>its.map((x,i)=>`<td class="num ekx${i===sel?" eksel":""}">${f(x)}</td>`).join("");
+ const ak=x=>{const a=((JENIS[F.j]||{}).akun||[]).find(r=>r[0]===x.akun);return esc(x.akun||"-")+(a?`<small>${esc(a[1])}</small>`:"");};
+ const ex=`<tr class="ekxr"><td></td><td>Kode akun</td>${cell(ak)}<td></td></tr><tr class="ekxr"><td></td><td>UST terkait</td>${cell(x=>x.ust?esc(x.ust):`<span class="ekxm">belum dipilih</span>`)}<td></td></tr><tr class="ekxr"><td></td><td>Jumlah SDM</td>${cell(x=>fmt(+x.qty||0)+" orang")}<td></td></tr>`;
+ const a=h.indexOf("</tr>");return h.slice(0,a+5)+ex+h.slice(a+5);}
+sdmEERefresh=(o=>function(){o();if(!F||!isSdmJ(F.j))return;const i=F.sdmSel??0,it=F.items[i];if(!it)return;
+ const hb=document.querySelector(".sdmd .sdmdh b");if(hb)hb.textContent=`Detail Fungsi / Jabatan — ${tCase(it.uraian||"Fungsi "+(i+1))}`;
+ const c=document.querySelector(`.sdc[data-i="${i}"]`);if(c){const st=sdmItemState(it),b=c.querySelector(".sdst");if(b){b.className="sdst "+(st.ok?"ok":"no");b.textContent=st.ok?"✓ Lengkap":"! Belum lengkap";}const sm=c.querySelectorAll("small")[0];if(sm)sm.textContent="Kode akun: "+it.akun;}
+ const t=$("#itemTot");if(t)t.textContent=rp(F.items.reduce((x,b)=>x+iTot(b),0));
+ const tt=t&&t.previousElementSibling;if(tt)tt.textContent=`Total draft usulan EE per bulan (${F.items.length} fungsi · ${fmt(F.items.reduce((x,b)=>x+(+b.qty||0),0))} orang)`;
+ document.querySelectorAll(".sdmt .eksel").forEach(e=>{e.classList.remove("ekfl");void e.offsetWidth;e.classList.add("ekfl");});})(sdmEERefresh);
+onInp8=(o=>function(e,t,ds){const r=o(e,t,ds);if(ds.it!==undefined&&F&&isSdmJ(F.j)&&ds.ik==="dasar"){const it=F.items[+ds.it];if(it)it.dasar=t.value;setTimeout(sdmEERefresh,0);}return r;})(onInp8);
 
 /* ================= VERIFIKASI PPJA ================= */
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
