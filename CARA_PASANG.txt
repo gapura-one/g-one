@@ -1,4 +1,4 @@
-G-ONE — Gapura One Network End-To-End (Prototype Versi 1, data simulasi)
+G-ONE — Gapura One Network End-To-End (Prototype Tahap 1, data simulasi)
 Paket aplikasi HP (PWA) untuk iPhone dan Android
 
 1. HOSTING (sekali saja, oleh tim IT)

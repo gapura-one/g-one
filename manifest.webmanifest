@@ -1,7 +1,7 @@
 {
   "name": "G-ONE — Gapura One Network End-To-End",
   "short_name": "G-ONE",
-  "description": "Integrated Corporate Budget Expenditure Monitoring — Prototype Versi 1 (data simulasi)",
+  "description": "Integrated Corporate Budget Expenditure Monitoring — Prototype Tahap 1 (data simulasi)",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
