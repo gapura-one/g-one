@@ -6191,9 +6191,9 @@ function sySnap(){const o={};DATA.forEach(p=>{o["d/"+syKey(p.id)]=syEnc(p);});o[
 /* ---------- kirim perubahan lokal ---------- */
 function syPush(){if(!SY.ready||SY.busy)return;let s;try{s=sySnap();}catch(e){console.warn("sync snap",e);return;}
  const body={};Object.keys(s).forEach(k=>{if(s[k]!==SY.last[k])body[k]=s[k];});Object.keys(SY.last).forEach(k=>{if(!(k in s))body[k]=null;});
- const ks=Object.keys(body);if(!ks.length)return;ks.forEach(k=>{if(body[k]===null)delete SY.last[k];else SY.last[k]=body[k];});
+ const ks=Object.keys(body);if(!ks.length)return;SY.sent=SY.sent||{};ks.forEach(k=>{(SY.sent[k]=SY.sent[k]||[]).push(body[k]);if(body[k]===null)delete SY.last[k];else SY.last[k]=body[k];});
  syState("send");fetch(SY.db+"/g1.json",{method:"PATCH",body:JSON.stringify(body)}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);syState("ok");})
-  .catch(e=>{console.warn("sync push",e);ks.forEach(k=>delete SY.last[k]);syState("err");});}
+  .catch(e=>{console.warn("sync push",e);ks.forEach(k=>{delete SY.last[k];if(SY.sent)delete SY.sent[k];});syState("err");});}
 const sySoon=()=>{if(!SY.db)return;clearTimeout(SY.pt);SY.pt=setTimeout(syPush,350);};
 /* ---------- terima perubahan dari perangkat lain ---------- */
 function syFlat(path,data,out){if(data===null||data===undefined)return;if(typeof data==="string"){out[path.replace(/^\/+/,"")]=data;return;}
@@ -6201,8 +6201,11 @@ function syFlat(path,data,out){if(data===null||data===undefined)return;if(typeof
 function syIngest(kind,path,data){const P=path.replace(/^\/+|\/+$/g,"");
  if(kind==="put"){Object.keys(SY.remote).forEach(k=>{if(!P||k===P||k.startsWith(P+"/"))delete SY.remote[k];});const o={};syFlat(P,data,o);Object.assign(SY.remote,o);}
  else if(kind==="patch"&&data&&typeof data==="object")Object.keys(data).forEach(k=>syIngest("put",(P?P+"/":"")+k,data[k]));}
-function syApply(){if(SY.inited)syPush();const R=SY.remote,ch=Object.keys(R).filter(k=>R[k]!==SY.last[k]);
- const gone=Object.keys(SY.last).filter(k=>k.startsWith("d/")&&!(k in R)&&SY.inited);if(!ch.length&&!gone.length)return false;
+function syApply(){if(SY.inited)syPush();const R=SY.remote,S=SY.sent||(SY.sent={});
+ /* gema dari kiriman sendiri: buang yang sudah diterima server; selama masih ada kiriman lebih baru yang tertunda, abaikan nilai server untuk kunci itu */
+ Object.keys(S).forEach(k=>{const v=k in R?R[k]:null,i=S[k].lastIndexOf(v);if(i>=0)S[k]=S[k].slice(i+1);if(!S[k].length)delete S[k];});
+ const pend=k=>!!(S[k]&&S[k].length),ch=Object.keys(R).filter(k=>R[k]!==SY.last[k]&&!pend(k));
+ const gone=Object.keys(SY.last).filter(k=>k.startsWith("d/")&&!(k in R)&&SY.inited&&!pend(k));if(!ch.length&&!gone.length)return false;
  try{SY.busy=true;
   const dch=ch.some(k=>k.startsWith("d/"))||ch.includes("s/ORDER")||gone.length;
   if(dch){const cur={};DATA.forEach(p=>cur[syKey(p.id)]=p);
