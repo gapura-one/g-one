@@ -6132,7 +6132,7 @@ setInterval(()=>{
    Struktur:  /g1/d/<id pengajuan>  = JSON 1 pengajuan
               /g1/s/<nama store>    = JSON store lain (urutan, draf, email, lintas pagu, PPA, penghitung nomor)
    Bila GONE_DB kosong → mode lokal (seperti sebelumnya). */
-const GONE_DB_URL="__GONE_DB__";
+const GONE_DB_URL="https://gapuraone-g-one-default-rtdb.asia-southeast1.firebasedatabase.app";
 const SY={db:"",id:Math.random().toString(36).slice(2,9),last:{},remote:{},st:"off",es:null,pt:null,at:null,uiWait:false,busy:false,ready:false};
 (()=>{let u=GONE_DB_URL.startsWith("__")?"":GONE_DB_URL;try{const q=new URLSearchParams(location.search).get("db");if(q)u=q;}catch(_){}SY.db=u.replace(/\/+$/,"");})();
 const syEnc=v=>JSON.stringify(v,function(k,x){const o=this[k];if(o instanceof Date)return {$d:o.getTime()};if(o instanceof Set)return {$s:[...o]};return x;});
