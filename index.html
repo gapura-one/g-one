@@ -6252,6 +6252,17 @@ logout=(o=>function(){try{localStorage.removeItem("gone_acc");}catch(_){}const r
 (()=>{try{const id=localStorage.getItem("gone_acc"),a=id&&ACCS.find(x=>x.id===id);if(a&&!ACC)setTimeout(()=>{if(!ACC){login(a);try{clearTimeout(NOTIF.t0);}catch(_){}}},0);}catch(_){}})();
 syInit();
 
+/* ===== Superadmin: hapus pengajuan (dummy / uji coba) — terhapus untuk semua akun & perangkat ===== */
+let SADEL={id:null,t:0};
+renderDetail=(o=>function(){o.apply(this,arguments);try{if(!ACC||T()!=="sa"||!SEL)return;const p=byId(SEL),A=document.querySelector("#detail .acts");if(!p||!A||A.querySelector("[data-act=saDel]"))return;
+ const b=document.createElement("button");b.className="btn red sm";b.dataset.act="saDel";b.dataset.id=p.id;b.title="Hapus permanen pengajuan ini dari data bersama (semua akun)";b.textContent="🗑 Hapus pengajuan";A.appendChild(b);}catch(e){}})(renderDetail);
+onAct8=(o=>function(act,a){if(act==="saDel"&&T()==="sa"){const id=a.dataset.id;
+  if(SADEL.id!==id||Date.now()-SADEL.t>5000){SADEL={id,t:Date.now()};toast(`Klik “Hapus pengajuan” sekali lagi dalam 5 detik untuk menghapus ${id} secara permanen (berlaku untuk semua akun).`);return true;}
+  SADEL={id:null,t:0};const i=DATA.findIndex(p=>p.id===id);if(i<0)return true;DATA.splice(i,1);
+  [DRAFTS,NMAIL,PNOTIF].forEach(L=>{if(!Array.isArray(L))return;for(let k=L.length-1;k>=0;k--){const x=L[k];if(x&&(x.pid===id||x.id===id||x.p===id))L.splice(k,1);}});
+  SEL=null;if(VF.sel===id)VF.sel=null;renderAll();sySoon();toast(`Pengajuan ${id} dihapus.`);return true;}
+ return o.apply(this,arguments);})(onAct8);
+
 </script>
 </body>
 </html>
