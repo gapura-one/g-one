@@ -1594,6 +1594,9 @@ h1,h2,h3,#vTitle,.fmh b,.nph b,.kph b,.sxh,.idh,.stp b,.lsec,.ttl2,.card>h3{font
 .dtab tbody tr.flag .sj{color:#713F12}
 .pen.on{background:#FACC15;border-color:#CA8A04;color:#713F12;box-shadow:0 0 0 3px rgba(250,204,21,.25)}
 @media (max-width:760px){.dtab tbody tr.flag{box-shadow:inset 4px 0 0 #EAB308;background:#FEF3C7!important}}
+/* catatan verifikasi: bebas huruf besar/kecil & tinggi mengikuti isi */
+textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:vertical;text-transform:none;line-height:1.55}
+.rvinfo{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f1f5fb;border:1px solid #d9e3f2;font-size:13px;color:#334155}.rvinfo b{color:#0b2a55}
 </style>
 </head>
 <body>
@@ -5208,7 +5211,7 @@ function renderVDetail(){
   ${!VM()&&T()==="ppja-appr"&&ACC.unit===p.unit&&st==="MENUNGGU"?`<label class="aprbox off"><input type="checkbox" disabled><span><b>Approve ${ee?"Engineering Estimate":"nilai persetujuan"} — belum tersedia</b>${hasDisp(p)||p.legacy?`Berkas di tahap Admin PPJA ${p.unit} (${esc(p.pic||ADMN[p.unit])}): ${pendingChecks(p).length} hal checklist belum selesai. Kotak Approve aktif setelah Admin → Reviewer Div.Head selesai.`:`Berkas baru masuk dan <b style="display:inline">belum didisposisikan</b>. ${disR(p)?`Sudah didisposisikan ke Reviewer Div.Head (${esc(REVN[p.unit])}) — menunggu Reviewer mendisposisikan ke Admin PPJA ${p.unit}.`:`Beri disposisi ke Reviewer Div.Head PPJA ${p.unit} (${esc(REVN[p.unit])}); Reviewer kemudian mendisposisikan ke Admin.`}`}</span></label>`:""}
   ${rel&&p.collab&&!colReady(p)?`<label class="aprbox off"><input type="checkbox" disabled><span><b>Approve EE — menunggu persetujuan PPJA terkait</b>Belum approve: ${p.collab.filter(c=>c.st!=="done").map(c=>"PPJA "+c.unit+" ("+colState(c).toLowerCase()+")").join(", ")}. Anda akan menerima notifikasi saat seluruhnya sudah approve.</span></label>`:""}
   ${rel&&(!p.collab||colReady(p))?`<label class="aprbox ${VF.aprOk&&VF.aprOk[p.id]?"on":""}"><input type="checkbox" data-aprchk="1" data-id="${p.id}" ${VF.aprOk&&VF.aprOk[p.id]?"checked":""}><span><b>Approve ${ee?"Engineering Estimate":"nilai persetujuan"}</b> — Saya, ${esc(ACC.nama)}, Approver PPJA ${p.unit}, menyetujui draf ${ee?"EE":"persetujuan"} di atas (total <b style="display:inline">${rp(eeTot(p))}</b>)${draftN(p)?`, termasuk ${draftN(p)} perubahan oleh Admin`:""}. Setelah dirilis, tanda DRAF pada PDF hilang.</span></label>`:""}
-  <div class="sec-t">Catatan verifikasi</div><textarea class="inp upc" style="width:100%" data-cat="1" data-id="${p.id}" placeholder="CATATAN UNTUK PENGAJU / APPROVER" ${onEE?"":"disabled"}>${esc(p.catatan)}</textarea>`;
+  <div class="sec-t">Catatan verifikasi</div><textarea class="inp catv" style="width:100%" data-cat="1" data-id="${p.id}" placeholder="Catatan untuk pengaju / reviewer / approver (bebas, huruf besar-kecil)" ${onEE?"":"disabled"}>${esc(p.catatan)}</textarea>`;
   h+=revActs(p);
   const why=pendingChecks(p);
   if(can)h+=`<div class="acts vact"><button class="btn green" data-act="toAppr" data-id="${p.id}" ${splitPlan(p).ok?"":"disabled"}>${splitPlan(p).rest.length&&splitPlan(p).ok?`Kirim Item ${splitPlan(p).done.map(i=>i+1).join(", ")} ke Approver PPJA ${p.unit} →`:`Kirim ke Approver PPJA ${p.unit} →`}</button><button class="btn ghost" data-act="previewOut" data-id="${p.id}">📄 Draf ${ee?"EE":"persetujuan"}</button>
@@ -6290,6 +6293,13 @@ toAppr=(o=>function(p){const S=splitPlan(p);if(!S.rest.length)return o(p);if(!ca
  const at=DATA.indexOf(p);DATA.splice(at+1,0,ch);
  notifyEmail(p,"Sebagian item diproses lebih dulu",["cab:"+p.cab,"ppja:"+p.unit],`EE diproses untuk ${p.items.length} item lengkap. Item belum lengkap (${nm.join(", ")}) dipisah menjadi ${cid} dan menyusul.`,n,null);
  o(p);toast(`${p.id} (Item lengkap) diteruskan ke Reviewer. Item belum lengkap kini ${cid} — tetap di Admin.`);})(toAppr);
+
+/* Reviewer / Approver: selalu tampilkan posisi berkas saat belum giliran (mis. sedang direvisi Admin) */
+revActs=(o=>function(p){const h=o(p);if(h||VM()||!ACC||ACC.unit!==p.unit||!["ppja-rev","ppja-appr"].includes(T()))return h;
+ const last=[...(p.hist||[])].reverse().find(x=>/dikembalikan|kembalikan/i.test(x.what||""));
+ let m="";if(p.status==="MENUNGGU"&&(hasDisp(p)||p.legacy))m=`<b>Berkas sedang di Admin PPJA ${p.unit}</b> (${esc(p.pic||ADMN[p.unit])})${last?` — dikembalikan untuk revisi: “${esc(String(last.note||"").slice(0,120))}”`:""}. Tombol <b>Review selesai — teruskan ke Approver</b> muncul lagi setelah Admin mengirim ulang hasil revisinya.`;
+ else if(p.status==="APPROVAL"&&p.rvOk&&T()==="ppja-rev")m=`<b>Review sudah selesai</b> — berkas di Approver GH ${esc(UNITS[p.unit].verifikator)} untuk rilis.`;
+ return m?`<div class="rvinfo">${m}</div>`:"";})(revActs);
 
 </script>
 </body>
