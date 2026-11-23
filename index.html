@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover">
 <meta name="theme-color" content="#003060">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1598,6 +1598,17 @@ h1,h2,h3,#vTitle,.fmh b,.nph b,.kph b,.sxh,.idh,.stp b,.lsec,.ttl2,.card>h3{font
 textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:vertical;text-transform:none;line-height:1.55}
 .rvinfo{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f1f5fb;border:1px solid #d9e3f2;font-size:13px;color:#334155}.rvinfo b{color:#0b2a55}
 #rows tr.rgh>td{background:#FBF7F7;color:#6b7280}#rows tr.rgh>td:first-child{box-shadow:inset 3px 0 0 #FCA5A5}#rows tr.rgh .code{color:#7f1d1d}
+/* email ditarik (recall) */
+.msg.rcl{padding:0;overflow:hidden;background:#fff;border:1px solid #e3e6ea}
+.msg.rcl .rcb{display:flex;align-items:center;gap:10px;background:#F1F3F5;color:#3f4650;font-size:13.5px;padding:10px 14px;border-bottom:1px solid #e3e6ea}
+.msg.rcl .rci{font-size:18px;color:#7a828c;line-height:1}.msg.rcl .h{padding:10px 14px;opacity:.85}.msg.rcl .w span{font-style:italic}
+/* indikator sinkron di HP: titik kecil di header, tidak menutupi konten */
+@media (max-width:760px){.syncb.mob{position:static;box-shadow:none;border:0;background:transparent;padding:0 4px;margin:0}.syncb.mob span,.syncb.mob button{display:none}.syncb.mob i{width:10px;height:10px;box-shadow:0 0 0 3px rgba(22,162,14,.15)}.syncb.mob.er i{box-shadow:0 0 0 3px rgba(217,48,37,.15)}}
+/* judul modal tidak terpotong tombol Tutup */
+@media (max-width:760px){#ajMH .fmhb{min-width:0;flex:1}#ajMH .fmhb>div{min-width:0}#ajMH .fmhb b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.25;font-size:16px}#ajMH>button{flex:none}}
+/* dokumen di HP: ukuran asli A4 lalu diperkecil pas layar (bisa dicubit untuk zoom) */
+#docModal.fitm .page{width:794px!important;max-width:none!important;min-height:1123px!important;padding:64px 72px 70px!important;font-size:15px!important;margin:0 0 14px!important;transform-origin:0 0}
+#docModal.fitm .page.land{width:1123px!important;min-height:794px!important;padding:38px 42px 60px!important}
 </style>
 </head>
 <body>
@@ -5416,7 +5427,7 @@ function openVerif(id,view){const p=byId(id),v=view||(isPPJA()&&(p.unit===ACC.un
 /* ================= KOORDINASI (EMAIL) ================= */
 const delivered=m=>!m.sched||m.dlv;
 function msgVis(p,m,me){if(m.fromP===me)return true;if(!delivered(m))return false;return SEEALL.includes(me)||isCore(p,me)||m.to.includes(me)||m.cc.includes(me)||(ALLV.includes(me)&&canSee(p)&&false);}
-const countsFor=(p,m,me)=>m.fromP!==me&&delivered(m)&&(isCore(p,me)||m.to.includes(me)||m.cc.includes(me));
+const countsFor=(p,m,me)=>m.fromP!==me&&!m.rc&&delivered(m)&&(isCore(p,me)||m.to.includes(me)||m.cc.includes(me));
 const visMsgs=(p,me=ME())=>p.msgs.filter(m=>msgVis(p,m,me));
 const unreadMsgs=(p,me=ME())=>p.msgs.filter(m=>countsFor(p,m,me)&&!m.read.has(me));
 const unread=p=>ACC?unreadMsgs(p).length:0;
@@ -5458,10 +5469,11 @@ function mailRows(){
  return L.map(p=>{const v=visMsgs(p,me),m=v[v.length-1],u=unreadMsgs(p,me).length,sl=slaInfo(p);
   return `<div class="mrw ${u?"unr":""}">${f==="trash"?`<span class="env">${TRASH_I}</span>`:`<button class="env" data-act="toggleRead" data-id="${p.id}" title="${u?"Tandai sudah dibaca":"Tandai belum dibaca"}">${u?ENV_C:ENV_O}</button>`}
   <button class="mrc" data-act="thread" data-id="${p.id}"><span class="s">${p.id} · ${pshort(origP(p))} ⇄ PPJA ${p.unit} · ${v.length} email${u?` · <b class="nw">${u} belum dibaca</b>`:""}</span><span class="tm">${tglS(m.t)} ${jam(m.t)}</span>
-  <b>${m.sched&&!m.dlv?"⏰ ":""}${esc(m.subj)}</b><span class="sn">${esc(m.who)}: ${esc(html2txt(m.html).replace(/\s+/g," ").slice(0,95))}</span><span class="sla s-${sl.c}">⏱ ${sl.t}</span></button>
+  <b>${m.sched&&!m.dlv?"⏰ ":""}${esc(m.subj)}</b><span class="sn">${m.rc?`↶ ${esc(m.who)}: email ditarik kembali (recall) ${tglS(m.rc)} ${jam(m.rc)}`:`${esc(m.who)}: ${esc(html2txt(m.html).replace(/\s+/g," ").slice(0,95))}`}</span><span class="sla s-${sl.c}">⏱ ${sl.t}</span></button>
   ${f==="trash"?`<button class="trs" data-act="untrash" data-id="${p.id}" title="Pulihkan ke kotak masuk">↩</button>`:`<button class="trs" data-act="trash" data-id="${p.id}" title="Hapus dari daftar (riwayat tetap tersimpan)">${TRASH_I}</button>`}</div>`;}).join("");
 }
 function msgCard(p,m,me){
+ if(m.rc){const mine0=m.fromP===me;return `<div class="msg rcl ${mine0?"me":""}"><div class="rcb"><span class="rci">↶</span>Recall attempted at ${tglS(m.rc)}, ${jam(m.rc)}</div><div class="h"><span class="av" style="background:#E07A2E">${pshort(m.fromP)}</span><div class="w"><b>${mine0?"Anda":esc(m.who)}</b><span>${esc(m.subj)} — email ini ditarik kembali oleh pengirim</span></div><div class="t">${tglS(m.t)}</div></div></div>`;}
  const mine=m.fromP===me,sch=m.sched&&!m.dlv,rd=[...m.to,...m.cc].filter(r=>m.read.has(r));
  const col=m.fromP.startsWith("cab")?"var(--green-dk)":m.fromP.startsWith("ppja")?"var(--navy)":"#023E8D";
  return `<div class="msg ${mine?"me":""} ${sch?"sch":""}"><div class="h"><span class="av" style="background:${col}">${pshort(m.fromP)}</span>
@@ -5545,12 +5557,13 @@ function doSend(p,sched){
 }
 function unsend(p,m){
  if(m.fromP!==ME())return;
- p.msgs=p.msgs.filter(x=>x!==m);
+ const keep={html:m.html,att:m.att.map(a=>({...a}))};m.rc=new Date();
  if(p.req&&p.req.msgId===m.id&&!p.req.ans&&!p.req.done)p.req=null;
  if(m.ansReq&&p.req)p.req.ans=null;
  m.att.forEach(a=>{if(a.doc){const [i,k]=a.doc.split(":");if(p.items[+i].docs[k]===a.name)p.items[+i].docs[k]=a.prev;}});
  p.hist.push({t:new Date(),who:m.who,what:"Email ditarik kembali (batal kirim): "+m.subj,note:"Disimpan kembali sebagai draf.",c:"m"});
- const d=mkDraft(p,{to:m.to,cc:m.cc,subj:m.subj,html:m.html,att:m.att.map(a=>({name:a.name,doc:a.doc,docN:a.docN})),need:m.need},"ditarik kembali");
+ const d=mkDraft(p,{to:m.to,cc:m.cc,subj:m.subj,html:keep.html,att:keep.att.map(a=>({name:a.name,doc:a.doc,docN:a.docN})),need:m.need},"ditarik kembali");
+ m.html="";m.att=[];m.need=false;
  MAIL.comp=compFromDraft(d);renderMail();renderBadges();toast("Email ditarik kembali dan otomatis menjadi draf — silakan perbaiki lalu kirim ulang.");
 }
 function unsched(p,m){p.msgs=p.msgs.filter(x=>x!==m);const d=mkDraft(p,m,"jadwal dibatalkan");MAIL.mode="thread";MAIL.id=p.id;MAIL.comp=compFromDraft(d);renderMail();toast("Jadwal kirim dibatalkan — email kembali menjadi draf.");}
@@ -6320,6 +6333,26 @@ function revGhost(p){return (p.revs||[]).filter(r=>["DITOLAK","BATAL"].includes(
   <td data-l="Posisi"><b style="color:#B91C1C">${r.status==="DITOLAK"?"Ditolak":"Dibatalkan"}</b><div class="mut" style="font-style:italic">${esc(String(r.alasan||"").slice(0,70))}</div><div style="margin-top:3px"><span class="tag t-o">${nx}</span></div></td>
   <td data-l="Progres"><span class="mut">—</span></td><td data-l="Status"><span class="pill p-x">${r.status==="DITOLAK"?"DITOLAK":"DIBATALKAN"}</span><div class="mut" style="margin-top:3px">${tglS(r.t)}</div></td><td data-l="Nominal" class="nom">${rpS(r.total||0)}</td><td data-l="Lama"><span class="mut">—</span></td></tr>`;}).join("");}
 onAct8=(o=>function(act,a){if(act==="selG"){SEL=a.dataset.id;renderMonitor();return true;}return o.apply(this,arguments);})(onAct8);
+
+/* ===== Notifikasi suara email masuk ("tring") ===== */
+const DING={ctx:null,last:null,lastT:0,on:true};
+try{DING.on=localStorage.getItem("gone_ding")!=="0";}catch(_){}
+function dingUnlock(){try{if(!DING.ctx){const C=window.AudioContext||window.webkitAudioContext;if(C)DING.ctx=new C();}if(DING.ctx&&DING.ctx.state==="suspended")DING.ctx.resume();}catch(_){}}
+["click","touchstart","keydown"].forEach(t=>document.addEventListener(t,dingUnlock,{passive:true}));
+function dingPlay(){if(!DING.on||!DING.ctx||Date.now()-DING.lastT<1500)return;DING.lastT=Date.now();try{const c=DING.ctx,t0=c.currentTime;
+ [[1318.5,0],[1975.5,.13]].forEach(([f,d])=>{const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,t0+d);g.gain.linearRampToValueAtTime(.22,t0+d+.012);g.gain.exponentialRampToValueAtTime(.0008,t0+d+.9);o.connect(g).connect(c.destination);o.start(t0+d);o.stop(t0+d+.95);});}catch(_){}}
+function dingCheck(){if(!ACC){DING.last=null;return;}let u=0;try{u=unreadAll();}catch(_){return;}if(DING.last!==null&&u>DING.last)dingPlay();DING.last=u;}
+setInterval(dingCheck,1500);
+login=(o=>function(){DING.last=null;const r=o.apply(this,arguments);setTimeout(dingCheck,50);return r;})(login);
+
+/* ===== Indikator sinkron di HP: jadi titik kecil di header ===== */
+syState=(o=>function(s){o(s);const el=document.getElementById("syncB"),bell=document.getElementById("bell");if(!el)return;
+ if(ACC&&window.innerWidth<=760&&bell&&bell.parentNode){if(el.nextElementSibling!==bell)bell.parentNode.insertBefore(el,bell);el.classList.add("mob");el.title=el.querySelector("span").textContent;}else el.classList.remove("mob");})(syState);
+
+/* ===== Dokumen di HP: tampil ukuran asli A4/landscape lalu diperkecil pas lebar layar; bisa dicubit (pinch) untuk perbesar ===== */
+function docFit(){const M=document.getElementById("docModal"),P=document.getElementById("docPages");if(!M||!P)return;const mob=window.innerWidth<=760;M.classList.toggle("fitm",mob);
+ P.querySelectorAll(".page").forEach(pg=>{if(!mob){pg.style.zoom="";return;}const w=pg.classList.contains("land")?1123:794,av=Math.max(240,P.clientWidth-4);pg.style.zoom=String(Math.min(1,av/w));});}
+(()=>{const P=document.getElementById("docPages");if(P)new MutationObserver(()=>requestAnimationFrame(docFit)).observe(P,{childList:true});window.addEventListener("resize",()=>{docFit();syState(SY.st);});})();
 
 </script>
 </body>
