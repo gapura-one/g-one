@@ -2144,7 +2144,10 @@ const VIS=()=>DATA.filter(canSee);
 const isOwner=p=>!!ACC&&T()!=="ppja-appr"&&T()!=="ppja-rev"&&origP(p)===ME();
 const canSubmit=()=>["cab","ppja-admin","bud","pgd","sekdir"].includes(T());
 const hasDisp=p=>(p.disp||[]).some(d=>d.to.some(x=>(TEAM[p.unit]||[]).includes(x)));
-const canVerify=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="MENUNGGU"&&(hasDisp(p)||!!p.collab||!!p.legacy);
+/* alur disposisi: Approver (GH) → Reviewer Div.Head → Admin PPJA */
+const disR=p=>(p.disp||[]).some(d=>d.to.includes(REVN[p.unit]));
+const wDisp=p=>p.status==="MENUNGGU"&&!hasDisp(p)&&!p.legacy&&!p.tinjau&&!reqOpen(p);
+const canVerify=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="MENUNGGU"&&(hasDisp(p)||!!p.legacy);
 const canRevise=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="TERBIT";
 const canEditPPJA=p=>!!p&&((canVerify(p)&&p.tinjau)||(canRevise(p)&&p.revOpen));
 const updUnseen=p=>!!ACC&&isOwner(p)&&(p.upd||0)>((p.updSeen||{})[ACC.id]||0);
@@ -2152,7 +2155,7 @@ const canEditDraft=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="APPROVA
 const draftN=p=>(p.dchg||[]).filter(c=>c.t>=p.tAdm).length;
 const canRelease=p=>T()==="ppja-appr"&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!!p.rvOk;
 const canReview=p=>T()==="ppja-rev"&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!p.rvOk;
-const canDisp=p=>(T()==="ppja-appr"||T()==="ppja-rev")&&ACC.unit===p.unit&&["MENUNGGU","APPROVAL"].includes(p.status);
+const canDisp=p=>(T()==="ppja-appr"||(T()==="ppja-rev"&&(disR(p)||p.status==="APPROVAL")))&&ACC.unit===p.unit&&["MENUNGGU","APPROVAL"].includes(p.status);
 const canReject=p=>isPPJA()&&ACC.unit===p.unit&&["MENUNGGU","KEMBALI","APPROVAL"].includes(p.status);
 const accUnitTxt=a=>a.type==="cab"?`Cabang ${a.cab} — ${CAB[a.cab][0]}`:a.unit?`PPJA ${a.unit} — ${UNITS[a.unit].nama}`:"Kantor Pusat";
 
@@ -2356,7 +2359,7 @@ function slaInfo(p){
  if(reqOpen(p)){const l=leftTxt(p.req.due);return {t:"Tanggapan cabang: "+l.t,c:l.late?"late":l.urgent?"warn":"ok",due:p.req.due};}
  const d=ppjaDue(p),l=leftTxt(d);return {t:(p.status==="APPROVAL"?(p.rvOk?"Approval PPJA: ":"Review PPJA: "):"Verifikasi PPJA: ")+l.t+((p.slaR||[]).length?` · SLA di-reset ${p.slaR.length}×`:""),c:l.late?"late":l.urgent?"warn":"ok",due:d};
 }
-function stLabel(p){switch(p.status){case "MENUNGGU":return reqOpen(p)?"Menunggu tanggapan cabang":p.tinjau?"Peninjauan Kembali PPJA "+p.unit:!hasDisp(p)&&!p.collab&&!p.legacy?"Menunggu disposisi GH PPJA "+p.unit:"Verifikasi admin PPJA "+p.unit;case "APPROVAL":return p.rvOk?"Approval GH PPJA "+p.unit:"Review Div.Head PPJA "+p.unit;
+function stLabel(p){switch(p.status){case "MENUNGGU":return reqOpen(p)?"Menunggu tanggapan cabang":p.tinjau?"Peninjauan Kembali PPJA "+p.unit:!hasDisp(p)&&!p.legacy?(disR(p)?"Menunggu disposisi Reviewer PPJA ":"Menunggu disposisi GH PPJA ")+p.unit:"Verifikasi admin PPJA "+p.unit;case "APPROVAL":return p.rvOk?"Approval GH PPJA "+p.unit:"Review Div.Head PPJA "+p.unit;
  case "KEMBALI":return "Dikembalikan";case "DITOLAK":return "Ditolak";case "BATAL":return "Dibatalkan";case "DRAF":return "Draf revisi";case "NDAPR":return `Approval nota dinas ${p.ndA.k+1}/${p.ndA.L.length} — ${p.ndA.L[p.ndA.k].n}`;case "NDKBL":return "Nota dinas dikembalikan approver";default:return p.legacy?"Berjalan (e-Letter): "+p.legacy.pos:outShort(p)+" dirilis";}}
 function stPill(p){const c={MENUNGGU:reqOpen(p)?"p-draft":p.tinjau?"p-rev":"p-wait",APPROVAL:"p-appr",KEMBALI:"p-back",TERBIT:"p-done",DITOLAK:"p-x",BATAL:"p-x",DRAF:"p-draft",NDAPR:"p-nd",NDKBL:"p-back"}[p.status];return p.status==="NDAPR"?`<span class="pill ${c} p2l"><span>Approval nota dinas ${p.ndA.k+1}/${p.ndA.L.length}<small>${esc(p.ndA.L[p.ndA.k].n)}</small></span></span>`:`<span class="pill ${c}">${stLabel(p)}</span>`;}
 function stMatch(p,st){switch(st){case "":return true;case "MENUNGGU":return (p.status==="MENUNGGU"&&!reqOpen(p))||p.status==="APPROVAL";
@@ -2550,7 +2553,7 @@ function posisi(p){
  if(st==="NDKBL")return {n:"Permohonan",s:"Nota dinas dikembalikan approver — "+String((p.ndA.ret||{}).note||"").slice(0,60),tag:'<span class="tag t-w">Perlu diperbaiki admin</span>',col:"var(--red)"};
  if(st==="DRAF")return {n:"Permohonan (draf revisi)",s:`REV ${p.rev+1} sedang disusun`,tag:'<span class="tag t-a">Belum diajukan</span>',col:"var(--amber)"};
  if(p.legacy)return {n:p.legacy.pos,s:`Pengajuan berjalan dari e-Letter ${p.nd} — posisi terakhir (input ${p.legacy.by})`,tag:p.legacy.miss.length?`<span class="tag t-w">⚠ ${p.legacy.miss.length} dokumen kurang</span>`:'<span class="tag t-g">Dokumen lengkap</span>',col:"#003060"};
- if(st==="MENUNGGU"&&!hasDisp(p)&&!p.collab&&!p.tinjau&&!reqOpen(p))return {n:"Verifikasi PPJA",s:`Masuk ke Approver (GH) PPJA ${p.unit} — menunggu disposisi ke Admin`,tag:'<span class="tag t-o">Belum didisposisikan</span>',col:"#023E8D"};
+ if(st==="MENUNGGU"&&wDisp(p))return disR(p)?{n:"Verifikasi PPJA",s:`Di Reviewer Div.Head PPJA ${p.unit} — menunggu disposisi ke Admin`,tag:'<span class="tag t-o">Disposisi ke Reviewer</span>',col:"#023E8D"}:{n:"Verifikasi PPJA",s:`Masuk ke Approver (GH) PPJA ${p.unit} — menunggu disposisi ke Reviewer`,tag:'<span class="tag t-o">Belum didisposisikan</span>',col:"#023E8D"};
  if(st==="TERBIT")return {n:"Verifikasi PPJA ✓",s:`${isEE(p)?"Surat balasan & EE":"Persetujuan"} dirilis`,tag:'<span class="tag t-o">🔒 Lanjut Create PPA — Tahap 2</span>'};
  if(st==="MENUNGGU"&&p.tinjau&&!reqOpen(p))return {n:"Verifikasi PPJA",s:"Peninjauan Kembali PPJA — rincian / narasi / dokumen disesuaikan PPJA "+p.unit,tag:`<span class="tag t-w">${(p.chg||[]).length} penyesuaian PPJA</span>`,col:"#B45309"};
  if(st==="APPROVAL")return p.rvOk?{n:"Verifikasi PPJA",s:`Menunggu rilis Approver (GH) PPJA ${p.unit}`,tag:'<span class="tag t-g">Review Div.Head selesai</span>',col:"#023E8D"}:{n:"Verifikasi PPJA",s:`Direview Reviewer Div.Head PPJA ${p.unit} — ${REVN[p.unit]}`,tag:'<span class="tag t-g">Checklist admin selesai</span>',col:"#023E8D"};
@@ -3514,8 +3517,8 @@ function eeSigRow(p){const U=UNITS[p.unit],rel=!dwm(p),chk=p.pic||p.chkBy||ADMN[
 /* ---- disposisi Approver / Reviewer ke tim PPJA ---- */
 const DARAH=["Untuk diverifikasi","Untuk ditindaklanjuti","Prioritas / segera","Untuk diketahui","Untuk dibuatkan kajian"];
 let DSP={pid:null,to:[],ar:[],note:""},DSQ=1;
-function dispTeam(p){const u=p.unit,L=TEAM[u].map((n,i)=>({n,r:i?"Staf / Admin PPJA "+u:"Admin PPJA "+u}));if(T()==="ppja-appr")L.push({n:REVN[u],r:"Reviewer Div.Head PPJA "+u});return L;}
-function dispOpen(p){DSP={pid:p.id,to:[],ar:["Untuk diverifikasi"],note:""};renderDsp();$("#dspM").classList.add("on");}
+function dispTeam(p){const u=p.unit;if(T()==="ppja-appr"&&p.status==="MENUNGGU"&&!hasDisp(p))return [{n:REVN[u],r:"Reviewer Div.Head PPJA "+u}];const L=TEAM[u].map((n,i)=>({n,r:i?"Staf / Admin PPJA "+u:"Admin PPJA "+u}));if(T()==="ppja-appr")L.push({n:REVN[u],r:"Reviewer Div.Head PPJA "+u});return L;}
+function dispOpen(p){DSP={pid:p.id,to:dispTeam(p).length===1?[dispTeam(p)[0].n]:[],ar:["Untuk diverifikasi"],note:""};renderDsp();$("#dspM").classList.add("on");}
 function renderDsp(){const p=byId(DSP.pid),T2=dispTeam(p);
  $("#dspB").innerHTML=`<div class="dsh"><div><small>DISPOSISI · PPJA ${p.unit}</small><b>${p.id} — ${esc(tCase(p.perihal))}</b><em>${esc(p.dari)} · ${esc(p.nd)}</em></div><button class="btn ghost sm" data-act="dspX">✕</button></div>
  <div class="dsg"><div><div class="dsl">Dari</div><div class="dsme"><span class="av2">${ini(ACC.nama)}</span><div><b>${esc(ACC.nama)}</b><em>${RT[T()]} ${p.unit}</em></div></div>
@@ -5049,6 +5052,13 @@ sdmEERefresh=(o=>function(){o();if(!F||!isSdmJ(F.j))return;const i=F.sdmSel??0,i
  document.querySelectorAll(".sdmt .eksel").forEach(e=>{e.classList.remove("ekfl");void e.offsetWidth;e.classList.add("ekfl");});})(sdmEERefresh);
 onInp8=(o=>function(e,t,ds){const r=o(e,t,ds);if(ds.it!==undefined&&F&&isSdmJ(F.j)&&ds.ik==="dasar"){const it=F.items[+ds.it];if(it)it.dasar=t.value;setTimeout(sdmEERefresh,0);}return r;})(onInp8);
 
+/* ===== Nota dinas cabang: MK (paraf) → GM (paraf) → EGM (tanda tangan, final) bila cabang punya EGM; tanpa EGM → MK → GM (final) ===== */
+const topJab=c=>EGMN[c]?"EXECUTIVE GENERAL MANAGER":"GENERAL MANAGER";
+newF=(o=>function(j){const f=o.apply(this,arguments);if(f&&f.cab&&f.cab!=="KPS"){f.jab=topJab(f.cab);f.ndL=null;}return f;})(newF);
+renderAjukan=(o=>function(){const r=o.apply(this,arguments);try{if(F&&F.cab&&F.cab!=="KPS"){if(F.jab!==topJab(F.cab)){F.jab=topJab(F.cab);F.ndL=null;return renderAjukan();}
+ const s=document.querySelector('#v-ajukan select[data-f="jab"],#ajM select[data-f="jab"]');if(s&&!s.disabled){s.disabled=true;s.title="Ditetapkan otomatis: pejabat tertinggi cabang yang menandatangani nota dinas";
+  const h=document.createElement("div");h.className="mut";h.style.cssText="font-size:11.5px;margin-top:4px";h.textContent=EGMN[F.cab]?"Otomatis — nota dinas cabang "+F.cab+" difinalkan EGM (alur: MK → GM → EGM).":"Otomatis — nota dinas cabang "+F.cab+" difinalkan GM (alur: MK → GM).";s.parentNode.appendChild(h);}}}catch(e){}return r;})(renderAjukan);
+
 /* ================= VERIFIKASI PPJA ================= */
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const ym=d=>`${d.getFullYear()}-${pad(d.getMonth()+1,2)}`;
@@ -5057,18 +5067,19 @@ const VM=()=>VIEW==="vmon";
 const vScope=()=>VM()?DATA.filter(canSee):DATA.filter(p=>isPPJA()&&(p.unit===ACC.unit||(p.collab||[]).some(c=>c.unit===ACC.unit)));
 const BOX0=[["PERLU","PERLU DIVERIFIKASI","b-amb"],["KEMBALI","PENINJAUAN KEMBALI PPJA","b-red"],["APPROVED","APPROVED","b-grn"]];
 const BOXES=()=>{const g=!VM()&&(T()==="ppja-appr"||T()==="ppja-rev"),a=!VM()&&T()==="ppja-admin";
- return [["PERLU",g?(T()==="ppja-appr"?"PERLU DISPOSISI":"PERLU REVIEW"):a?"PERLU VERIFIKASI · DISPOSISI ATASAN":"PERLU DIVERIFIKASI","b-amb"],
+ return [["PERLU",g?(T()==="ppja-appr"?"PERLU DISPOSISI":"PERLU DISPOSISI / REVIEW"):a?"PERLU VERIFIKASI · DISPOSISI ATASAN":"PERLU DIVERIFIKASI","b-amb"],
   a?["WDISP","DI ATASAN · MENUNGGU DISPOSISI","b-ind"]:["DISP",g?"SUDAH SAYA DISPOSISI":"SUDAH DISPOSISI","b-ind"],["KEMBALI","PENINJAUAN KEMBALI PPJA","b-red"],["APPROVED","APPROVED","b-grn"]];};
 const BOX=BOX0;
 function inBox(p,k){if(k==="DISP")return (p.disp||[]).length>0&&(VM()||!(T()==="ppja-appr"||T()==="ppja-rev")||p.disp.some(d=>d.from===ACC.nama));
- if(k==="WDISP")return p.status==="MENUNGGU"&&!hasDisp(p)&&!p.collab&&p.unit===ACC.unit;return boxOf(p)===k;}
+ if(k==="WDISP")return wDisp(p)&&p.unit===ACC.unit;return boxOf(p)===k;}
 function boxOf(p){
  {const c=!VM()&&myCollab(p);if(c)return p.status==="TERBIT"||c.st==="done"?"APPROVED":((T()==="ppja-admin"&&c.st==="wait")||(T()==="ppja-appr"&&c.st==="sub"))&&["MENUNGGU","APPROVAL"].includes(p.status)?"PERLU":null;}
  if(VM()){if(p.status==="TERBIT")return "APPROVED";if(p.tinjau&&p.status==="MENUNGGU"||p.status==="KEMBALI"||p.status==="DRAF"||reqOpen(p))return "KEMBALI";if(p.status==="MENUNGGU"||p.status==="APPROVAL")return "PERLU";return null;}
  if(p.status==="TERBIT")return "APPROVED";
  if(p.tinjau&&p.status==="MENUNGGU"||p.status==="KEMBALI"||p.status==="DRAF"||reqOpen(p))return "KEMBALI";
- if(T()==="ppja-admin"&&p.status==="MENUNGGU")return hasDisp(p)||p.collab||p.legacy?"PERLU":null;
- if(T()==="ppja-appr"&&p.status==="MENUNGGU"&&!hasDisp(p)&&!p.collab&&!p.legacy)return "PERLU";
+ if(T()==="ppja-admin"&&p.status==="MENUNGGU")return hasDisp(p)||p.legacy?"PERLU":null;
+ if(T()==="ppja-appr"&&wDisp(p)&&!disR(p))return "PERLU";
+ if(T()==="ppja-rev"&&wDisp(p)&&disR(p))return "PERLU";
  if(T()==="ppja-appr"&&p.status==="APPROVAL"&&p.rvOk)return "PERLU";
  if(T()==="ppja-rev"&&p.status==="APPROVAL"&&!p.rvOk)return "PERLU";
  if(!isPPJA()&&(p.status==="MENUNGGU"||p.status==="APPROVAL"))return "PERLU";
@@ -5141,7 +5152,7 @@ function renderVDetail(){
  <button class="btn sm" data-act="thread" data-id="${p.id}">✉ Koordinasi${u?` · ${u} baru`:""}</button>
  <button class="btn ghost sm" data-act="krono" data-id="${p.id}">🕑 Kronologis</button>
  ${st==="TERBIT"?`<button class="btn green sm" data-act="doc" data-id="${p.id}" data-k="reply">📄 ${ee?"Surat balasan + EE":"Surat persetujuan"}</button>`:""}</div>`;
- const flow=`<div class="wflow">${[["Pengaju",st!=="DRAF"],["Disposisi GH "+p.unit,hasDisp(p)||!!p.collab||st==="TERBIT"],["Admin PPJA "+p.unit,["APPROVAL","TERBIT"].includes(st)],["Reviewer Div.Head "+p.unit,st==="TERBIT"||(st==="APPROVAL"&&!!p.rvOk)],["Approver GH "+p.unit,st==="TERBIT"],["Rilis "+(ee?"surat balasan + EE":"persetujuan"),st==="TERBIT"]].map(([l,d],k)=>{const cur=(k===1&&st==="MENUNGGU"&&!hasDisp(p)&&!p.collab)||(k===2&&st==="MENUNGGU"&&(hasDisp(p)||!!p.collab))||(k===3&&st==="APPROVAL"&&!p.rvOk)||(k===4&&st==="APPROVAL"&&p.rvOk);return `<div class="wf ${d?"d":cur?"c":""}"><span>${d?"✓":k+1}</span>${l}</div>`;}).join("")}</div>`;
+ const flow=`<div class="wflow">${[["Pengaju",st!=="DRAF"],["Disposisi GH → Reviewer "+p.unit,disR(p)||hasDisp(p)||!!p.legacy||["APPROVAL","TERBIT"].includes(st)],["Disposisi Reviewer → Admin "+p.unit,hasDisp(p)||!!p.legacy||["APPROVAL","TERBIT"].includes(st)],["Admin PPJA "+p.unit,["APPROVAL","TERBIT"].includes(st)],["Reviewer Div.Head "+p.unit,st==="TERBIT"||(st==="APPROVAL"&&!!p.rvOk)],["Approver GH "+p.unit,st==="TERBIT"],["Rilis "+(ee?"surat balasan + EE":"persetujuan"),st==="TERBIT"]].map(([l,d],k)=>{const cur=(k===1&&st==="MENUNGGU"&&!hasDisp(p)&&!p.collab)||(k===2&&st==="MENUNGGU"&&(hasDisp(p)||!!p.collab))||(k===3&&st==="APPROVAL"&&!p.rvOk)||(k===4&&st==="APPROVAL"&&p.rvOk);return `<div class="wf ${d?"d":cur?"c":""}"><span>${d?"✓":k+1}</span>${l}</div>`;}).join("")}</div>`;
  h+=flow;
  if(!["MENUNGGU","APPROVAL"].includes(st)){
   if(st==="TERBIT"&&(p.upd||canRevise(p)))h+=revBlock(p,i);
@@ -5180,7 +5191,7 @@ function renderVDetail(){
    <td class="num"><input class="inp eein" type="number" min="0" step="1000" data-ee="${k}" data-id="${p.id}" value="${p.eeH[k]}" ${onEE&&!J.lead&&!p.rinc?"":"disabled"}>${(()=>{const c=[...dc].reverse().find(c=>c.i===k);return c&&st==="APPROVAL"?`<div class="dch">diubah Admin · semula ${esc(c.first)}</div>`:"";})()}</td><td class="num" id="eej${k}">${rp(eQ(p,k)*p.eeH[k])}</td><td>${w?`<span class="tag t-w">${w} belum</span>`:'<span class="tag t-g">✓ lengkap</span>'}</td></tr>`;}).join("")}
   <tr><td colspan="${J.pn&&!p.rinc?4:3}"><b>Total</b></td><td class="num"><b>${rp(total(p))}</b></td><td></td><td class="num"><b id="eeTot">${rp(eeTot(p))}</b></td><td></td></tr></table></div>`}
   ${p.collab?`<div class="acts"><button class="btn ghost" data-act="eeMx" data-id="${p.id}">📄 Pratinjau EE</button><span class="mut">Matriks EE gabungan seluruh PPJA terkait</span></div>`:""}
-  ${!VM()&&T()==="ppja-appr"&&ACC.unit===p.unit&&st==="MENUNGGU"?`<label class="aprbox off"><input type="checkbox" disabled><span><b>Approve ${ee?"Engineering Estimate":"nilai persetujuan"} — belum tersedia</b>${hasDisp(p)||p.collab?`Berkas di tahap Admin PPJA ${p.unit} (${esc(p.pic||ADMN[p.unit])}): ${pendingChecks(p).length} hal checklist belum selesai. Kotak Approve aktif setelah Admin → Reviewer Div.Head selesai.`:`Berkas baru masuk dan <b style="display:inline">belum didisposisikan</b>. Beri disposisi ke Admin PPJA ${p.unit} agar verifikasi dimulai.`}</span></label>`:""}
+  ${!VM()&&T()==="ppja-appr"&&ACC.unit===p.unit&&st==="MENUNGGU"?`<label class="aprbox off"><input type="checkbox" disabled><span><b>Approve ${ee?"Engineering Estimate":"nilai persetujuan"} — belum tersedia</b>${hasDisp(p)||p.legacy?`Berkas di tahap Admin PPJA ${p.unit} (${esc(p.pic||ADMN[p.unit])}): ${pendingChecks(p).length} hal checklist belum selesai. Kotak Approve aktif setelah Admin → Reviewer Div.Head selesai.`:`Berkas baru masuk dan <b style="display:inline">belum didisposisikan</b>. ${disR(p)?`Sudah didisposisikan ke Reviewer Div.Head (${esc(REVN[p.unit])}) — menunggu Reviewer mendisposisikan ke Admin PPJA ${p.unit}.`:`Beri disposisi ke Reviewer Div.Head PPJA ${p.unit} (${esc(REVN[p.unit])}); Reviewer kemudian mendisposisikan ke Admin.`}`}</span></label>`:""}
   ${rel&&p.collab&&!colReady(p)?`<label class="aprbox off"><input type="checkbox" disabled><span><b>Approve EE — menunggu persetujuan PPJA terkait</b>Belum approve: ${p.collab.filter(c=>c.st!=="done").map(c=>"PPJA "+c.unit+" ("+colState(c).toLowerCase()+")").join(", ")}. Anda akan menerima notifikasi saat seluruhnya sudah approve.</span></label>`:""}
   ${rel&&(!p.collab||colReady(p))?`<label class="aprbox ${VF.aprOk&&VF.aprOk[p.id]?"on":""}"><input type="checkbox" data-aprchk="1" data-id="${p.id}" ${VF.aprOk&&VF.aprOk[p.id]?"checked":""}><span><b>Approve ${ee?"Engineering Estimate":"nilai persetujuan"}</b> — Saya, ${esc(ACC.nama)}, Approver PPJA ${p.unit}, menyetujui draf ${ee?"EE":"persetujuan"} di atas (total <b style="display:inline">${rp(eeTot(p))}</b>)${draftN(p)?`, termasuk ${draftN(p)} perubahan oleh Admin`:""}. Setelah dirilis, tanda DRAF pada PDF hilang.</span></label>`:""}
   <div class="sec-t">Catatan verifikasi</div><textarea class="inp upc" style="width:100%" data-cat="1" data-id="${p.id}" placeholder="CATATAN UNTUK PENGAJU / APPROVER" ${onEE?"":"disabled"}>${esc(p.catatan)}</textarea>`;
@@ -5566,8 +5577,9 @@ function notifItems(){
   if(T()==="ppja-appr"&&c.st==="sub")P.push({p,t:`Approve ${colRoleTxt(c).toLowerCase()} PPJA ${c.unit} untuk EE PPJA ${p.unit}`,s:"diisi "+(c.by||""),act:"verif"});});
  if(isPPJA())DATA.filter(p=>p.unit===ACC.unit&&p.collab&&colReady(p)&&((T()==="ppja-admin"&&p.status==="MENUNGGU")||(T()==="ppja-appr"&&p.status==="APPROVAL"))).forEach(p=>P.push({p,t:`✓ Seluruh PPJA terkait sudah approve — ${T()==="ppja-appr"?"rilis EE":"teruskan ke Approver untuk rilis EE"}`,s:p.collab.map(c=>c.unit).join(", "),act:"verif"}));
  if(isPPJA())DATA.filter(p=>p.unit===ACC.unit&&!isOwner(p)).forEach(p=>{
-  if(T()==="ppja-appr"&&p.status==="MENUNGGU"&&!hasDisp(p)&&!p.collab&&!p.legacy){const l=leftTxt(ppjaDue(p));P.push({p,t:"Beri disposisi ke Admin — berkas baru dari "+pshort(origP(p)),s:l.t,act:"verif"});}
-  if(T()==="ppja-admin"&&p.status==="MENUNGGU"&&!reqOpen(p)&&(hasDisp(p)||p.collab||p.legacy)){const l=leftTxt(ppjaDue(p));P.push({p,t:p.tinjau?"Selesaikan Peninjauan Kembali PPJA — "+pshort(origP(p)):p.req&&p.req.ans&&!p.req.done?"Tinjau tanggapan "+pshort(origP(p)):"Verifikasi berkas "+pshort(origP(p)),s:l.t,act:"verif"});if(l.late)FU.push({p,t:"Lewat target verifikasi — selesaikan berkas "+pshort(origP(p)),s:l.t,act:"verif"});}
+  if(T()==="ppja-appr"&&wDisp(p)&&!disR(p)){const l=leftTxt(ppjaDue(p));P.push({p,t:"Beri disposisi ke Reviewer — berkas baru dari "+pshort(origP(p)),s:l.t,act:"verif"});}
+  if(T()==="ppja-rev"&&wDisp(p)&&disR(p)){const l=leftTxt(ppjaDue(p));P.push({p,t:"Disposisi dari Approver GH — teruskan ke Admin PPJA: "+pshort(origP(p)),s:l.t,act:"verif"});}
+  if(T()==="ppja-admin"&&p.status==="MENUNGGU"&&!reqOpen(p)&&(hasDisp(p)||p.legacy)){const l=leftTxt(ppjaDue(p));P.push({p,t:p.tinjau?"Selesaikan Peninjauan Kembali PPJA — "+pshort(origP(p)):p.req&&p.req.ans&&!p.req.done?"Tinjau tanggapan "+pshort(origP(p)):"Verifikasi berkas "+pshort(origP(p)),s:l.t,act:"verif"});if(l.late)FU.push({p,t:"Lewat target verifikasi — selesaikan berkas "+pshort(origP(p)),s:l.t,act:"verif"});}
   if(T()==="ppja-rev"&&p.status==="APPROVAL"&&!p.rvOk){const l=leftTxt(ppjaDue(p));P.push({p,t:"Review hasil verifikasi Admin & draf "+(isEE(p)?"EE":"nilai")+" — "+pshort(origP(p)),s:l.t,act:"verif"});if(l.urgent)FU.push({p,t:"Review mendekati / lewat target — "+pshort(origP(p)),s:l.t,act:"verif"});}
   if(T()==="ppja-appr"&&p.status==="APPROVAL"&&p.rvOk){const l=leftTxt(ppjaDue(p));P.push({p,t:"Rilis surat balasan & "+(isEE(p)?"EE":"persetujuan")+" — "+pshort(origP(p)),s:l.t,act:"verif"});if(draftN(p))P.push({p,t:`Draf ${isEE(p)?"EE":"nilai"} diubah Admin (${draftN(p)} perubahan) — tinjau sebelum rilis`,s:"Admin "+ADMN[p.unit],act:"verif"});if(l.urgent)FU.push({p,t:"Approval mendekati / lewat target — "+pshort(origP(p)),s:l.t,act:"verif"});}
   if(T()==="ppja-admin"&&reqOpen(p)){const l=leftTxt(p.req.due);FU.push({p,t:`Follow up ${pshort(origP(p))} — ${p.status==="KEMBALI"?"berkas belum dilengkapi":"belum menanggapi email"}`,s:"batas pengaju "+l.t,act:"thread"});}
