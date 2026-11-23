@@ -1585,6 +1585,9 @@ h1,h2,h3,#vTitle,.fmh b,.nph b,.kph b,.sxh,.idh,.stp b,.lsec,.ttl2,.card>h3{font
 @keyframes sypl{50%{opacity:.35}}
 @media (max-width:760px){.syncb{bottom:calc(66px + env(safe-area-inset-bottom));left:8px;font-size:10px;padding:4px 8px}}
 @media print{.syncb{display:none}}
+
+.syncb.inhdr{position:static;box-shadow:none;background:#f3f7f4;border-color:#d5e6d8;font-size:11.5px;padding:6px 12px;margin-right:8px;white-space:nowrap}
+.syncb.inhdr.er{background:#fdecea;border-color:#f3c7c3}.syncb.inhdr.ld{background:#fff7e0;border-color:#f1dfa6}
 </style>
 </head>
 <body>
@@ -6195,7 +6198,8 @@ async function syInit(){if(!SY.db){syState("off");return;}syState("load");
 /* ---------- indikator & reset (superadmin) ---------- */
 function syState(s){SY.st=s;const el=document.getElementById("syncB");if(!el)return;
  const M={off:["Mode lokal — data tidak tersimpan","off"],load:["Menghubungkan data bersama…","ld"],send:["Menyimpan…","ld"],ok:["Data bersama tersinkron","ok"],err:["Data bersama terputus — mencoba lagi","er"]}[s]||["",""];
- el.className="syncb "+M[1];el.querySelector("span").textContent=M[0];el.querySelector("button").style.display=ACC&&T()==="sa"&&SY.db?"":"none";}
+ const dt=document.querySelector(".demo-tag"),inH=!!(ACC&&dt&&window.innerWidth>760);if(inH&&el.nextElementSibling!==dt)dt.parentNode.insertBefore(el,dt);if(!inH&&el.parentNode!==document.body)document.body.appendChild(el);
+ el.className="syncb "+M[1]+(inH?" inhdr":"");el.querySelector("span").textContent=M[0];el.querySelector("button").style.display=ACC&&T()==="sa"&&SY.db?"":"none";}
 (()=>{const b=document.createElement("div");b.id="syncB";b.className="syncb off";b.innerHTML=`<i></i><span></span><button data-act="syReset" title="Kembalikan seluruh data simulasi ke kondisi awal untuk semua akun">Reset data</button>`;document.body.appendChild(b);syState(SY.db?"load":"off");})();
 let SYRQ=0;
 onAct8=(o=>function(act,a){if(act==="syReset"){
@@ -6205,6 +6209,7 @@ onAct8=(o=>function(act,a){if(act==="syReset"){
 /* simpan setiap ada interaksi; render ulang yang tertunda saat selesai mengetik */
 ["click","change","input","drop","keyup"].forEach(t=>document.addEventListener(t,sySoon,false));
 document.addEventListener("focusout",()=>setTimeout(()=>{if(SY.uiWait&&!syTyping())syRender();},120));
+window.addEventListener("resize",()=>syState(SY.st));
 setInterval(()=>{if(SY.ready&&document.visibilityState==="visible")syPush();},4000);
 login=(o=>function(a){const r=o.apply(this,arguments);try{if(a&&a.id)localStorage.setItem("gone_acc",a.id);}catch(_){}setTimeout(()=>{syState(SY.st);sySoon();},0);return r;})(login);
 logout=(o=>function(){try{localStorage.removeItem("gone_acc");}catch(_){}const r=o.apply(this,arguments);syState(SY.st);return r;})(logout);
