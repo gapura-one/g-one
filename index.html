@@ -5211,9 +5211,9 @@ function renderVDetail(){
   <div class="sec-t">Catatan verifikasi</div><textarea class="inp upc" style="width:100%" data-cat="1" data-id="${p.id}" placeholder="CATATAN UNTUK PENGAJU / APPROVER" ${onEE?"":"disabled"}>${esc(p.catatan)}</textarea>`;
   h+=revActs(p);
   const why=pendingChecks(p);
-  if(can)h+=`<div class="acts vact"><button class="btn green" data-act="toAppr" data-id="${p.id}" ${why.length?"disabled":""}>Kirim ke Approver PPJA ${p.unit} →</button><button class="btn ghost" data-act="previewOut" data-id="${p.id}">📄 Draf ${ee?"EE":"persetujuan"}</button>
+  if(can)h+=`<div class="acts vact"><button class="btn green" data-act="toAppr" data-id="${p.id}" ${splitPlan(p).ok?"":"disabled"}>${splitPlan(p).rest.length&&splitPlan(p).ok?`Kirim Item ${splitPlan(p).done.map(i=>i+1).join(", ")} ke Approver PPJA ${p.unit} →`:`Kirim ke Approver PPJA ${p.unit} →`}</button><button class="btn ghost" data-act="previewOut" data-id="${p.id}">📄 Draf ${ee?"EE":"persetujuan"}</button>
    ${p.tinjau?`<button class="btn" data-act="tinjauEnd" data-id="${p.id}">✓ Selesai peninjauan</button>`:`<button class="btn ghost" data-act="tinjau" data-id="${p.id}">✎ Peninjauan Kembali PPJA</button>`}<button class="btn red" data-act="reject" data-id="${p.id}">Tolak pengajuan</button></div>
-   <div class="why">${why.length?`Belum dapat diteruskan — ${why.length} hal belum terpenuhi: ${why.slice(0,3).map(esc).join("; ")}${why.length>3?"; …":""}`:"Seluruh checklist semua item sesuai — siap diteruskan ke Approver untuk rilis surat balasan & "+(ee?"EE":"persetujuan")+"."}<br>Admin memverifikasi; surat balasan + EE dirilis oleh Approver PPJA ${p.unit} (${esc(U.verifikator)}).</div>`;
+   <div class="why">${splitPlan(p).ok&&splitPlan(p).rest.length?splitWhy(p):why.length?`Belum dapat diteruskan — ${why.length} hal belum terpenuhi: ${why.slice(0,3).map(esc).join("; ")}${why.length>3?"; …":""}`:"Seluruh checklist semua item sesuai — siap diteruskan ke Approver untuk rilis surat balasan & "+(ee?"EE":"persetujuan")+"."}<br>Admin memverifikasi; surat balasan + EE dirilis oleh Approver PPJA ${p.unit} (${esc(U.verifikator)}).</div>`;
   if(st==="APPROVAL"&&dc.length)h+=`<div class="sec-t">Perubahan draf EE oleh Admin setelah diteruskan (${dc.length})</div>${dc.map(c=>`<div class="vr"><span class="m na">✎</span><div class="tx">${c.i===null?"Catatan":"Item "+(c.i+1)} · ${esc(c.label)}<div class="f">${esc(c.old)} → <b>${esc(c.nw)}</b> · ${dtx(c.t)} · ${esc(c.by)}</div></div></div>`).join("")}`;
   if(!VM()&&canEditDraft(p))h+=`<div class="acts vact"><button class="btn green" data-act="previewOut" data-id="${p.id}">📄 Lihat draf ${ee?"surat balasan & EE":"surat persetujuan"}</button></div>
    <div class="why">Berkas sudah di Approver PPJA ${p.unit} (${esc(U.verifikator)}). Admin masih dapat mengubah draf ${ee?"EE":"nilai"} dan catatan; setiap perubahan tercatat dan diberitahukan ke Approver sebelum rilis.</div>`;
@@ -6265,6 +6265,31 @@ onAct8=(o=>function(act,a){if(act==="saDel"&&T()==="sa"){const id=a.dataset.id;
   [DRAFTS,NMAIL,PNOTIF].forEach(L=>{if(!Array.isArray(L))return;for(let k=L.length-1;k>=0;k--){const x=L[k];if(x&&(x.pid===id||x.id===id||x.p===id))L.splice(k,1);}});
   SEL=null;if(VF.sel===id)VF.sel=null;renderAll();sySoon();toast(`Pengajuan ${id} dihapus.`);return true;}
  return o.apply(this,arguments);})(onAct8);
+
+/* ===== Rilis EE per item: item yang checklist-nya lengkap boleh diteruskan lebih dulu; item yang belum lengkap dipisah
+   menjadi pengajuan turunan (nomor induk + huruf) yang tetap di Admin dan menyusul dengan EE sendiri ===== */
+function splitPlan(p){const L=pendingChecks(p),gen=L.filter(w=>!/^Item \d+: /.test(w)),done=[],rest=[];
+ p.items.forEach((it,i)=>{(pendingChecks(p,i).length?rest:done).push(i);});
+ const ok=!gen.length&&done.length>0&&(!rest.length||(!p.collab&&!p.rinc));return {ok,gen,done,rest};}
+function splitWhy(p){const S=splitPlan(p),nx=splitNextId(p);
+ return `<b style="color:#047857">Item ${S.done.map(i=>i+1).join(", ")} lengkap</b> — dapat diteruskan sekarang dan EE dirilis untuk item tersebut. `+
+  `Item ${S.rest.map(i=>i+1).join(", ")} belum lengkap (${S.rest.map(i=>pendingChecks(p,i).length).reduce((a,b)=>a+b,0)} hal) — akan dipisah menjadi <b>${esc(nx)}</b> dan tetap di Admin untuk diselesaikan menyusul (EE terpisah).`;}
+function splitNextId(p){const base=p.parent||p.id;let c=66;while(DATA.some(x=>x.id===base+"-"+String.fromCharCode(c)))c++;return base+"-"+String.fromCharCode(c);}
+function splitRemap(q,idx){const mp={};idx.forEach((o,n)=>mp[o]=n);q.items=idx.map(i=>q.items[i]);
+ const nv={};Object.keys(q.v||{}).forEach(k=>{const m=k.match(/^([dxp])_(\d+)_(.*)$/);if(!m){nv[k]=q.v[k];return;}const o=+m[2];if(o in mp)nv[`${m[1]}_${mp[o]}_${m[3]}`]=q.v[k];});q.v=nv;
+ ["eeH","eeQ","eeR","eeRQ","eeK"].forEach(f=>{const a=q[f];if(!a||typeof a!=="object")return;if(Array.isArray(a))q[f]=idx.map(i=>a[i]);else{const o={};idx.forEach((i,n)=>{if(i in a)o[n]=a[i];});q[f]=o;}});
+ if(Array.isArray(q.dchg))q.dchg=q.dchg.filter(c=>c.i==null||c.i in mp).map(c=>c.i==null?c:{...c,i:mp[c.i]});}
+let SPLQ={id:null,t:0};
+toAppr=(o=>function(p){const S=splitPlan(p);if(!S.rest.length)return o(p);if(!canVerify(p)||!S.ok)return;
+ if(SPLQ.id!==p.id||Date.now()-SPLQ.t>6000){SPLQ={id:p.id,t:Date.now()};toast(`Item ${S.rest.map(i=>i+1).join(", ")} belum lengkap dan akan dipisah menjadi ${splitNextId(p)}. Klik “Kirim” sekali lagi untuk meneruskan Item ${S.done.map(i=>i+1).join(", ")}.`);return;}
+ SPLQ={id:null,t:0};const n=new Date(),cid=splitNextId(p),ch=syDec(syEnc(p));
+ ch.id=cid;ch.parent=p.parent||p.id;ch.split=undefined;splitRemap(ch,S.rest);ch.status="MENUNGGU";ch.tAdm=null;ch.rvOk=false;ch.catatan="";ch.msgs=[];
+ ch.hist=[...(p.hist||[]),{t:n,who:`PPJA ${p.unit} — ${ACC.nama} (Admin)`,what:`Dipisah dari ${p.id}: Item ${S.rest.map(i=>i+1).join(", ")} belum lengkap — diproses menyusul dengan EE terpisah`,note:S.rest.map(i=>p.items[i].uraian).join("; ")}];
+ const nm=S.rest.map(i=>p.items[i].uraian);splitRemap(p,S.done);(p.split=p.split||[]).push(cid);
+ p.hist.push({t:n,who:`PPJA ${p.unit} — ${ACC.nama} (Admin)`,what:`Item belum lengkap dipisah menjadi ${cid} (tetap di Admin)`,note:nm.join("; ")});
+ const at=DATA.indexOf(p);DATA.splice(at+1,0,ch);
+ notifyEmail(p,"Sebagian item diproses lebih dulu",["cab:"+p.cab,"ppja:"+p.unit],`EE diproses untuk ${p.items.length} item lengkap. Item belum lengkap (${nm.join(", ")}) dipisah menjadi ${cid} dan menyusul.`,n,null);
+ o(p);toast(`${p.id} (Item lengkap) diteruskan ke Reviewer. Item belum lengkap kini ${cid} — tetap di Admin.`);})(toAppr);
 
 </script>
 </body>
