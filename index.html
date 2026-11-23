@@ -1577,6 +1577,14 @@ h1,h2,h3,#vTitle,.fmh b,.nph b,.kph b,.sxh,.idh,.stp b,.lsec,.ttl2,.card>h3{font
 .sdmt th.eksel{background:#1f7a3a!important;color:#fff!important}.sdmt td.eksel{background:#e9f6ec}
 @keyframes ekfl{0%{box-shadow:inset 0 0 0 2px rgba(31,122,58,.55)}100%{box-shadow:inset 0 0 0 2px rgba(31,122,58,0)}}.sdmt .ekfl{animation:ekfl .7s ease-out}
 @media (prefers-reduced-motion:reduce){.sdmt .ekfl{animation:none}}
+
+/* indikator data bersama */
+.syncb{position:fixed;left:12px;bottom:12px;z-index:60;display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.92);border:1px solid #dde3ea;box-shadow:0 2px 10px rgba(0,30,60,.08);font-size:11px;color:#445;backdrop-filter:blur(6px)}
+.syncb i{width:8px;height:8px;border-radius:50%;background:#9aa;flex:none}.syncb.ok i{background:#16a20e}.syncb.ld i{background:#e3a008;animation:sypl 1s infinite}.syncb.er i{background:#d93025}
+.syncb button{border:0;background:#fdecea;color:#b3261e;font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;cursor:pointer}
+@keyframes sypl{50%{opacity:.35}}
+@media (max-width:760px){.syncb{bottom:calc(66px + env(safe-area-inset-bottom));left:8px;font-size:10px;padding:4px 8px}}
+@media print{.syncb{display:none}}
 </style>
 </head>
 <body>
@@ -6118,6 +6126,91 @@ setInterval(()=>{
  if(NOTIF.next&&Date.now()>=NOTIF.next.getTime()){if(NOTIF.demo||inOffice())pushShow();schedulePush(NOTIF.iv*6e4);}
  renderBell();
 },5000);
+
+/* ================= DATA BERSAMA (sinkron antar akun & perangkat) =================
+   Penyimpanan: Firebase Realtime Database lewat REST + streaming (tanpa SDK).
+   Struktur:  /g1/d/<id pengajuan>  = JSON 1 pengajuan
+              /g1/s/<nama store>    = JSON store lain (urutan, draf, email, lintas pagu, PPA, penghitung nomor)
+   Bila GONE_DB kosong → mode lokal (seperti sebelumnya). */
+const GONE_DB_URL="__GONE_DB__";
+const SY={db:"",id:Math.random().toString(36).slice(2,9),last:{},remote:{},st:"off",es:null,pt:null,at:null,uiWait:false,busy:false,ready:false};
+(()=>{let u=GONE_DB_URL.startsWith("__")?"":GONE_DB_URL;try{const q=new URLSearchParams(location.search).get("db");if(q)u=q;}catch(_){}SY.db=u.replace(/\/+$/,"");})();
+const syEnc=v=>JSON.stringify(v,function(k,x){const o=this[k];if(o instanceof Date)return {$d:o.getTime()};if(o instanceof Set)return {$s:[...o]};return x;});
+const syDec=s=>JSON.parse(s,(k,x)=>{if(x&&typeof x==="object"&&!Array.isArray(x)){const ks=Object.keys(x);if(ks.length===1&&ks[0]==="$d")return new Date(x.$d);if(ks.length===1&&ks[0]==="$s")return new Set(x.$s);}return x;});
+const syKey=id=>String(id).replace(/[.#$\[\]\/]/g,"_");
+const syRepl=(o,v)=>{Object.keys(o).forEach(k=>delete o[k]);Object.assign(o,v||{});};
+const syArr=(a,v)=>{a.splice(0,a.length,...(v||[]));};
+/* store selain pengajuan: [ambil, pasang] */
+const SYST={
+ TRASH:[()=>TRASH,v=>syRepl(TRASH,v)],DRAFTS:[()=>DRAFTS,v=>syArr(DRAFTS,v)],FLAGS:[()=>FLAGS,v=>syRepl(FLAGS,v)],NMAIL:[()=>NMAIL,v=>syArr(NMAIL,v)],
+ FDR:[()=>FDR,v=>syArr(FDR,v)],PAGUDB:[()=>PAGUDB,v=>syRepl(PAGUDB,v)],PAGU:[()=>PAGU,v=>syArr(PAGU,v)],PSRC:[()=>PSRC,v=>syRepl(PSRC,v)],
+ PPA:[()=>PPA,v=>{PPA=v;}],PNOTIF:[()=>PNOTIF,v=>{PNOTIF=v||[];}],PPASEQ:[()=>PPASEQ,v=>{PPASEQ=v||{};}],
+ CTR:[()=>({MSGID,DID,NMID,XID,SEQ,NDSEQ,OUTSEQ,FDID,PGSEQ,DSQ,PGQ,DPQ,VCQ}),v=>{if(!v)return;const M=(a,b)=>Math.max(+a||0,+b||0);
+  MSGID=M(MSGID,v.MSGID);DID=M(DID,v.DID);NMID=M(NMID,v.NMID);XID=M(XID,v.XID);SEQ=M(SEQ,v.SEQ);NDSEQ=M(NDSEQ,v.NDSEQ);OUTSEQ=M(OUTSEQ,v.OUTSEQ);
+  FDID=M(FDID,v.FDID);PGSEQ=M(PGSEQ,v.PGSEQ);DSQ=M(DSQ,v.DSQ);PGQ=M(PGQ,v.PGQ);DPQ=M(DPQ,v.DPQ);VCQ=M(VCQ,v.VCQ);}]};
+function sySnap(){const o={};DATA.forEach(p=>{o["d/"+syKey(p.id)]=syEnc(p);});o["s/ORDER"]=syEnc(DATA.map(p=>p.id));
+ Object.keys(SYST).forEach(k=>{o["s/"+k]=syEnc(SYST[k][0]());});return o;}
+/* ---------- kirim perubahan lokal ---------- */
+function syPush(){if(!SY.ready||SY.busy)return;let s;try{s=sySnap();}catch(e){console.warn("sync snap",e);return;}
+ const body={};Object.keys(s).forEach(k=>{if(s[k]!==SY.last[k])body[k]=s[k];});Object.keys(SY.last).forEach(k=>{if(!(k in s))body[k]=null;});
+ const ks=Object.keys(body);if(!ks.length)return;ks.forEach(k=>{if(body[k]===null)delete SY.last[k];else SY.last[k]=body[k];});
+ syState("send");fetch(SY.db+"/g1.json",{method:"PATCH",body:JSON.stringify(body)}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);syState("ok");})
+  .catch(e=>{console.warn("sync push",e);ks.forEach(k=>delete SY.last[k]);syState("err");});}
+const sySoon=()=>{if(!SY.db)return;clearTimeout(SY.pt);SY.pt=setTimeout(syPush,350);};
+/* ---------- terima perubahan dari perangkat lain ---------- */
+function syFlat(path,data,out){if(data===null||data===undefined)return;if(typeof data==="string"){out[path.replace(/^\/+/,"")]=data;return;}
+ if(typeof data==="object")Object.keys(data).forEach(k=>syFlat(path+"/"+k,data[k],out));}
+function syIngest(kind,path,data){const P=path.replace(/^\/+|\/+$/g,"");
+ if(kind==="put"){Object.keys(SY.remote).forEach(k=>{if(!P||k===P||k.startsWith(P+"/"))delete SY.remote[k];});const o={};syFlat(P,data,o);Object.assign(SY.remote,o);}
+ else if(kind==="patch"&&data&&typeof data==="object")Object.keys(data).forEach(k=>syIngest("put",(P?P+"/":"")+k,data[k]));}
+function syApply(){if(SY.inited)syPush();const R=SY.remote,ch=Object.keys(R).filter(k=>R[k]!==SY.last[k]);
+ const gone=Object.keys(SY.last).filter(k=>k.startsWith("d/")&&!(k in R)&&SY.inited);if(!ch.length&&!gone.length)return false;
+ try{SY.busy=true;
+  const dch=ch.some(k=>k.startsWith("d/"))||ch.includes("s/ORDER")||gone.length;
+  if(dch){const cur={};DATA.forEach(p=>cur[syKey(p.id)]=p);
+   const ord=R["s/ORDER"]?syDec(R["s/ORDER"]):DATA.map(p=>p.id),seen=new Set(),nd=[];
+   const take=id=>{const k=syKey(id);if(seen.has(k))return;seen.add(k);const rk="d/"+k;if(R[rk]===undefined)return;nd.push(R[rk]!==SY.last[rk]||!cur[k]?syDec(R[rk]):cur[k]);};
+   ord.forEach(take);Object.keys(R).filter(k=>k.startsWith("d/")).forEach(k=>{const p=syDec(R[k]);take(p.id);});DATA=nd;}
+  ch.filter(k=>k.startsWith("s/")&&k!=="s/ORDER").forEach(k=>{const n=k.slice(2);if(SYST[n])SYST[n][1](syDec(R[k]));});
+  gone.forEach(k=>delete SY.last[k]);ch.forEach(k=>{SY.last[k]=R[k];});
+ }catch(e){console.warn("sync apply",e);}finally{SY.busy=false;}
+ SY.inited=true;syRender();return true;}
+const syTyping=()=>{const a=document.activeElement;return !!a&&a!==document.body&&(a.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))&&!a.closest(".login");};
+function syRender(){if(!ACC)return;if(syTyping()){SY.uiWait=true;return;}SY.uiWait=false;
+ const y=window.scrollY;try{if(VIEW==="ajukan"){renderBadges();if(AJM!=="new")renderAjukan();}else{renderAll();if(VIEW==="cek")renderCek();}if(typeof renderNav==="function")renderNav();if(typeof renderBell==="function")renderBell();}catch(e){console.warn("sync render",e);}
+ window.scrollTo(0,y);}
+function syOpen(){if(SY.es)try{SY.es.close();}catch(_){}
+ const es=new EventSource(SY.db+"/g1.json");SY.es=es;
+ const on=kind=>ev=>{let m;try{m=JSON.parse(ev.data);}catch(_){return;}if(!m)return;syIngest(kind,m.path||"/",m.data);clearTimeout(SY.at);SY.at=setTimeout(()=>{syApply();syState("ok");},60);};
+ es.addEventListener("put",on("put"));es.addEventListener("patch",on("patch"));
+ es.addEventListener("cancel",()=>syState("err"));es.addEventListener("auth_revoked",()=>syState("err"));
+ es.onerror=()=>{syState("err");};es.onopen=()=>syState("ok");}
+async function syInit(){if(!SY.db){syState("off");return;}syState("load");
+ try{if(typeof ppaSeed==="function"&&!PPA){const k=ACC;ppaSeed();ACC=k;}}catch(_){}
+ try{const r=await fetch(SY.db+"/g1.json");if(!r.ok)throw new Error("HTTP "+r.status);const tree=await r.json();
+  if(!tree||!tree.d&&!tree.s){SY.ready=true;SY.inited=true;SY.last={};syPush();}
+  else{syIngest("put","/",tree);SY.ready=true;syApply();SY.inited=true;}
+  syOpen();syState("ok");}
+ catch(e){console.warn("sync init",e);syState("err");SY.ready=false;setTimeout(syInit,8000);}}
+/* ---------- indikator & reset (superadmin) ---------- */
+function syState(s){SY.st=s;const el=document.getElementById("syncB");if(!el)return;
+ const M={off:["Mode lokal — data tidak tersimpan","off"],load:["Menghubungkan data bersama…","ld"],send:["Menyimpan…","ld"],ok:["Data bersama tersinkron","ok"],err:["Data bersama terputus — mencoba lagi","er"]}[s]||["",""];
+ el.className="syncb "+M[1];el.querySelector("span").textContent=M[0];el.querySelector("button").style.display=ACC&&T()==="sa"&&SY.db?"":"none";}
+(()=>{const b=document.createElement("div");b.id="syncB";b.className="syncb off";b.innerHTML=`<i></i><span></span><button data-act="syReset" title="Kembalikan seluruh data simulasi ke kondisi awal untuk semua akun">Reset data</button>`;document.body.appendChild(b);syState(SY.db?"load":"off");})();
+let SYRQ=0;
+onAct8=(o=>function(act,a){if(act==="syReset"){
+  if(Date.now()-SYRQ>5000){SYRQ=Date.now();toast("Klik “Reset data” sekali lagi dalam 5 detik untuk mengosongkan data bersama ke kondisi awal (berlaku untuk semua akun).");return true;}
+  SYRQ=0;SY.ready=false;fetch(SY.db+"/g1.json",{method:"PUT",body:"null"}).then(()=>{toast("Data bersama direset. Memuat ulang…");setTimeout(()=>location.reload(),900);}).catch(()=>toast("Reset gagal — periksa koneksi."));return true;}
+ return o.apply(this,arguments);})(onAct8);
+/* simpan setiap ada interaksi; render ulang yang tertunda saat selesai mengetik */
+["click","change","input","drop","keyup"].forEach(t=>document.addEventListener(t,sySoon,false));
+document.addEventListener("focusout",()=>setTimeout(()=>{if(SY.uiWait&&!syTyping())syRender();},120));
+setInterval(()=>{if(SY.ready&&document.visibilityState==="visible")syPush();},4000);
+login=(o=>function(a){const r=o.apply(this,arguments);try{if(a&&a.id)localStorage.setItem("gone_acc",a.id);}catch(_){}setTimeout(()=>{syState(SY.st);sySoon();},0);return r;})(login);
+logout=(o=>function(){try{localStorage.removeItem("gone_acc");}catch(_){}const r=o.apply(this,arguments);syState(SY.st);return r;})(logout);
+/* tetap login setelah halaman dimuat ulang (per perangkat) */
+(()=>{try{const id=localStorage.getItem("gone_acc"),a=id&&ACCS.find(x=>x.id===id);if(a&&!ACC)setTimeout(()=>{if(!ACC){login(a);try{clearTimeout(NOTIF.t0);}catch(_){}}},0);}catch(_){}})();
+syInit();
 
 </script>
 </body>
