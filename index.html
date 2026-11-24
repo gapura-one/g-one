@@ -6381,6 +6381,11 @@ onAct8=(o=>function(act,a){
  return o.apply(this,arguments);})(onAct8);
 fillContoh=(o=>function(){const r=o.apply(this,arguments);try{const J=F&&JENIS[F.j];if(J&&J.kons){F.items.forEach(it=>{it.akun=J.akun[0][0];it.uraian="JASA "+J.nama.toUpperCase();});F.perihal="PERMOHONAN PERSETUJUAN "+J.nama.toUpperCase();renderAjukan();}}catch(e){}return r;})(fillContoh);
 
+/* Subkontrak Aircraft Cleaning: bukan kartu sendiri — masuk lewat kartu Pengajuan SDM / Alih Daya (HC·HM, UST OP) */
+SDMTILE.ket="Penambahan SDM, subkontrak (mis. aircraft cleaning), penyesuaian tarif, pengadaan baru, perpanjangan, masa transisi, repeat order";
+if(!FUNGSI.some(f=>/aircraft clean/i.test(f[0])))FUNGSI.push(["Aircraft Cleaning (Cleaner)","OP",1]);
+tilesHtml=(o=>function(tiles,q){const hc=tiles.some(([k])=>k==="cleaning");let T=tiles.filter(([k])=>k!=="cleaning");if(hc&&!T.some(([k])=>isSdmJ(k)))T.push(["sdmops",JENIS.sdmops]);return o(T,q);})(tilesHtml);
+
 </script>
 </body>
 </html>
