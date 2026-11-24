@@ -1653,6 +1653,26 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tbxbar.rb .tbhint{flex-basis:100%;font-size:10.5px;color:#6b7280;padding:3px 8px 5px;border-top:1px dashed #e3e8ef}
 .tbxbar.rb.off .tbb,.tbxbar.rb.off .tbsm,.tbxbar.rb.off .tbal{opacity:.45;pointer-events:none}
 .tbxbar.rb .tbxh,.tbxbar.rb .tbxl{display:none}
+/* bilah Tabel — rapi & seragam */
+.tbxbar.rb{padding:6px 8px 0;gap:0;align-items:stretch}
+.tbxbar.rb .tbg{padding:0 12px;min-height:84px}
+.tbxbar.rb .tbr{align-items:center;gap:4px;flex:1}
+.tbxbar.rb .tbb{width:66px;min-width:0;padding:5px 2px 4px;gap:4px;color:#1e293b;font-size:11.5px}
+.tbxbar.rb .tbi{height:26px;display:flex;align-items:center;justify-content:center}
+.tbxbar.rb .tbt{display:block;line-height:1.2;min-height:28px}.tbxbar.rb .tbt small{font-size:9px;color:#64748b}
+.tbxbar.rb .tbcol{gap:2px;justify-content:center}
+.tbxbar.rb .tbsm{gap:7px;padding:4px 8px;font-size:12px;color:#1e293b;height:26px}
+.tbxbar.rb .tbsm svg{flex:none}
+.tbxbar.rb .tbalc{align-items:flex-start;padding-left:10px;border-left:1px solid #e3e8ef;margin-left:4px}
+.tbxbar.rb .tbsub{font-size:11px;color:#64748b;padding:0 4px 2px}
+.tbxbar.rb .tbal{gap:2px}.tbxbar.rb .tbal .tbsm{padding:4px 6px;border:1px solid #e3e8ef;background:#fff}
+.tbxbar.rb .tbal .tbsm:hover{background:#e6eef8}
+.tbxbar.rb .tbl2{font-size:11px;color:#64748b;padding:4px 0 5px}
+.tbxbar.rb .tbmenu button{padding:7px 12px}
+.tbxbar.rb .tbr{align-items:flex-start}
+.tbxbar.rb .tbb{width:auto;min-width:58px;padding:5px 6px 4px}
+.tbxbar.rb .tbt{white-space:nowrap}
+.tbxbar.rb .tbcol{align-self:center}
 </style>
 </head>
 <body>
@@ -6638,6 +6658,44 @@ function tIco(k){const g=hl=>{let s='';for(let r=0;r<3;r++)for(let c=0;c<3;c++)s
   merge:'<rect x="2" y="6" width="21" height="18" fill="#fff" stroke="#4b5563"/><rect x="2" y="12" width="21" height="6" fill="#9cc3ef" stroke="#4b5563"/>'+a("M6 15h13M16 12.5l3 2.5-3 2.5M9 12.5L6 15l3 2.5"),
   split:'<rect x="2" y="6" width="21" height="18" fill="#fff" stroke="#4b5563"/><rect x="2" y="12" width="21" height="6" fill="#9cc3ef" stroke="#4b5563"/><path d="M12.5 6v18" stroke="#1f2937" stroke-width="1.6" stroke-dasharray="2 1.5"/>'};
  return `<svg viewBox="0 0 32 28" width="32" height="28">${M[k]||g(()=>0)}</svg>`;}
+
+/* ikon tabel dirapikan: garis tipis seragam (gaya toolbar), aksen biru untuk bagian yang terdampak */
+function tIco(k){const S='stroke="#334155" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+ const tb=(x,y,w,h,hl)=>{const cw=w/3,rh=h/3;let s='';if(hl){const [t,i]=hl;s+=t==="r"?`<rect x="${x}" y="${y+i*rh}" width="${w}" height="${rh}" fill="#BFDBFE"/>`:`<rect x="${x+i*cw}" y="${y}" width="${cw}" height="${h}" fill="#BFDBFE"/>`;}
+  return s+`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.5" ${S}/><path d="M${x} ${y+rh}H${x+w}M${x} ${y+2*rh}H${x+w}M${x+cw} ${y}V${y+h}M${x+2*cw} ${y}V${y+h}" ${S}/>`;};
+ const A=d=>`<path d="${d}" stroke="#2563EB" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const M={
+  del:tb(2,3,16,15)+`<circle cx="18.5" cy="18.5" r="4.6" fill="#fff" stroke="#DC2626" stroke-width="1.5"/><path d="M16.8 16.8l3.4 3.4M20.2 16.8l-3.4 3.4" stroke="#DC2626" stroke-width="1.6" stroke-linecap="round"/>`,
+  rA:tb(4,8,16,14,["r",0])+A("M12 6.5V1.5M9.5 4L12 1.5 14.5 4"),
+  rB:tb(4,2,16,14,["r",2])+A("M12 17.5v5M9.5 20L12 22.5 14.5 20"),
+  cL:tb(8,4,14,16,["c",0])+A("M6.5 12H1.5M4 9.5L1.5 12 4 14.5"),
+  cR:tb(2,4,14,16,["c",2])+A("M17.5 12h5M20 9.5L22.5 12 20 14.5"),
+  merge:`<rect x="2" y="5" width="20" height="14" rx="1.5" ${S}/><rect x="2.8" y="5.8" width="18.4" height="12.4" fill="#BFDBFE"/>`+A("M5.5 12h13M8 9.5L5.5 12 8 14.5M16 9.5l2.5 2.5-2.5 2.5"),
+  split:`<rect x="2" y="5" width="20" height="14" rx="1.5" ${S}/><path d="M12 5v14" stroke="#334155" stroke-width="1.5" stroke-dasharray="2 2"/>`+A("M9.5 12H5M7 10l-2 2 2 2M14.5 12H19M17 10l2 2-2 2"),
+  bg:`<rect x="3" y="3" width="18" height="18" rx="2" ${S}/><rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor" class="swf"/>`,
+  bg0:`<rect x="3" y="3" width="18" height="18" rx="2" ${S}/><path d="M5 19L19 5" stroke="#DC2626" stroke-width="1.6" stroke-linecap="round"/>`,
+  alL:`<path d="M4 6h16M4 10h10M4 14h16M4 18h10" ${S}/>`,alC:`<path d="M4 6h16M7 10h10M4 14h16M7 18h10" ${S}/>`,alR:`<path d="M4 6h16M10 10h10M4 14h16M10 18h10" ${S}/>`,
+  mg:tb(2,5,20,14,["c",1])+A("M7.5 12h9M14.5 10l2 2-2 2")};
+ return `<svg viewBox="0 0 24 24" width="${["alL","alC","alR","bg","bg0","mg"].includes(k)?18:26}" height="${["alL","alC","alR","bg","bg0","mg"].includes(k)?18:26}">${M[k]||tb(4,4,16,16)}</svg>`;}
+tbxBar=function(){if(TBX.el)return TBX.el;const d=document.createElement("div");d.className="tbxbar rb";
+ const big=(ico,a,l)=>`<button type="button" class="tbb" ${a}><span class="tbi">${tIco(ico)}</span><span class="tbt">${l}</span></button>`;
+ const sm=(ico,a,l,t)=>`<button type="button" class="tbsm" ${a} title="${t||l}">${tIco(ico)}${l?`<span>${l}</span>`:""}</button>`;
+ d.innerHTML=`<div class="tbg"><div class="tbr">
+   <div class="tbdd"><button type="button" class="tbb" data-tbxm="del"><span class="tbi">${tIco("del")}</span><span class="tbt">Hapus <small>▾</small></span></button>
+    <div class="tbmenu"><button type="button" data-tbx="dR">Hapus baris</button><button type="button" data-tbx="dC">Hapus kolom</button><button type="button" data-tbx2="clr">Kosongkan isi sel</button><button type="button" data-tbx="dT">Hapus tabel</button></div></div>
+   ${big("rA",'data-tbx="rA"',"Sisip Baris<br>Atas")}${big("rB",'data-tbx="rB"',"Sisip Baris<br>Bawah")}${big("cL",'data-tbx="cL"',"Sisip Kolom<br>Kiri")}${big("cR",'data-tbx="cR"',"Sisip Kolom<br>Kanan")}</div><div class="tbl2">Baris &amp; Kolom</div></div>
+  <div class="tbg"><div class="tbr">${big("merge",'data-tbx2="merge"',"Gabung<br>Sel")}${big("split",'data-tbx2="split"',"Pisah<br>Sel")}</div><div class="tbl2">Gabung</div></div>
+  <div class="tbg"><div class="tbr"><div class="tbcol">
+    <label class="tbsm" title="Warna latar sel">${tIco("bg")}<span>Warna sel</span><input type="color" value="#DBEAFE" data-tbx2="bg"></label>
+    ${sm("bg0",'data-tbx2="bg0"',"Tanpa warna")}${sm("mg",'data-tbx="mg"',"Gabung ke kanan")}</div>
+   <div class="tbcol tbalc"><span class="tbsub">Perataan</span><div class="tbal">${sm("alL",'data-tbx2="al" data-v="left"',"","Rata kiri")}${sm("alC",'data-tbx2="al" data-v="center"',"","Rata tengah")}${sm("alR",'data-tbx2="al" data-v="right"',"","Rata kanan")}</div></div></div><div class="tbl2">Sel</div></div>
+  <div class="tbhint">Seret mouse / Shift+klik untuk blok sel · seret garis kanan sel untuk mengubah lebar kolom</div>`;
+ d.addEventListener("mousedown",e=>{const m=e.target.closest("[data-tbxm]");if(m){e.preventDefault();m.parentNode.classList.toggle("open");return;}
+  const b=e.target.closest("[data-tbx]");if(b){e.preventDefault();d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));tbxDo(b.dataset.tbx);return;}
+  const c=e.target.closest("[data-tbx2]");if(c&&c.tagName!=="INPUT"&&!c.closest("label")){e.preventDefault();d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));if(c.dataset.tbx2==="clr"){tTargets().forEach(x=>x.innerHTML="<br>");const ed=TBX.td&&TBX.td.closest(".rte");ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}else tbx2(c.dataset.tbx2,c.dataset.v);}});
+ d.addEventListener("input",e=>{const b=e.target.closest("[data-tbx2=bg]");if(b){d.querySelector(".swf").setAttribute("fill",b.value);tbx2("bg",b.value);}});
+ document.addEventListener("mousedown",e=>{if(!e.target.closest||!e.target.closest(".tbdd"))d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));});
+ TBX.el=d;setTimeout(()=>{const f=d.querySelector(".swf");if(f)f.setAttribute("fill","#DBEAFE");},0);return d;};
 
 </script>
 </body>
