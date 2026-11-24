@@ -5096,6 +5096,8 @@ renderContrib=(o=>function(p){o(p);const c=myCollab(p);if(!c)return;const B=$("#
  const t=B.querySelector(".tjb.upd");const w=document.createElement("div");w.innerHTML=dispPanel(p);if(w.firstElementChild){if(t)t.after(w.firstElementChild);else B.querySelector(".card")&&B.querySelector(".card").appendChild(w.firstElementChild);}
  if(c.st==="wait"&&!hasDispU(p,c.unit)){const inf=[...B.querySelectorAll(".info")].pop();const msg=disRU(p,c.unit)?`Menunggu disposisi Reviewer Div.Head PPJA ${c.unit} (${REVN[c.unit]}) ke Admin.`:`Menunggu disposisi Approver (GH) PPJA ${c.unit} ke Reviewer Div.Head.`;
   if(inf)inf.innerHTML=`<div>${esc(msg)} Admin PPJA ${c.unit} mulai mengisi setelah disposisi diterima.</div>`;}})(renderContrib);
+JENIS.gse.badge="OT·OP";
+JENIS.cleaning.unit="OT";JENIS.cleaning.badge="OT·OP";
 
 /* ================= VERIFIKASI PPJA ================= */
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
