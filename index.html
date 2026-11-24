@@ -1609,6 +1609,7 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 /* dokumen di HP: ukuran asli A4 lalu diperkecil pas layar (bisa dicubit untuk zoom) */
 #docModal.fitm .page{width:794px!important;max-width:none!important;min-height:1123px!important;padding:64px 72px 70px!important;font-size:15px!important;margin:0 0 14px!important;transform-origin:0 0}
 #docModal.fitm .page.land{width:1123px!important;min-height:794px!important;padding:38px 42px 60px!important}
+.tile2[data-j=konsx]>b{padding-right:118px;white-space:normal}
 </style>
 </head>
 <body>
@@ -6361,7 +6362,7 @@ const KONS=[["kons_kf","Konsultan Keuangan","6767000","G&A - Beban Jasa Konsulta
  ["kons_man","Konsultan Manajemen","6767002","G&A - Beban Jasa Konsultan Manajemen","US"],["kons_hkm","Konsultan Hukum","6767003","G&A - Beban Jasa Konsultan Hukum","UL"],
  ["kons_sdm","Konsultan SDM","6767004","G&A - Beban Jasa Konsultan SDM","HM"],["aud_kf","Audit Keuangan","6767100","G&A - Beban Jasa Audit Keuangan","KF"],["aud_iso","Audit ISO 9000","6767101","G&A - Beban Jasa Audit ISO 9000","UQ"]];
 (()=>{const B=JENIS.counter;KONS.forEach(([k,n,a,an,u])=>{if(JENIS[k])return;JENIS[k]={...B,nama:n,ket:`Pengajuan jasa ${n.toLowerCase()} — PPJA ${u}`,unit:u,badge:undefined,akun:[[a,an]],kons:1};});})();
-const KONSTILE={nama:"Pengajuan Konsultan",ket:"Konsultan keuangan, ISO 9000, manajemen, hukum, SDM, serta audit keuangan & ISO 9000",unit:"KF",badge:"KONSULTAN",out:JENIS.counter.out};
+const KONSTILE={nama:"Pengajuan Konsultan",ket:"Konsultan keuangan, ISO 9000, manajemen, hukum, SDM, serta audit keuangan & ISO 9000",unit:"KF",badge:[...new Set(KONS.map(x=>x[4]))].join("·"),out:JENIS.counter.out};
 let KONSPOP=false;
 tilesHtml=(o=>function(tiles,q){const had=tiles.some(([k])=>k==="counter"||(JENIS[k]&&JENIS[k].kons));let T=tiles.filter(([k])=>k!=="counter"&&!(JENIS[k]&&JENIS[k].kons));
  if(had||(q&&"konsultan audit iso keuangan hukum manajemen".includes(q)))T.push(["konsx",KONSTILE]);
@@ -6382,8 +6383,10 @@ onAct8=(o=>function(act,a){
 fillContoh=(o=>function(){const r=o.apply(this,arguments);try{const J=F&&JENIS[F.j];if(J&&J.kons){F.items.forEach(it=>{it.akun=J.akun[0][0];it.uraian="JASA "+J.nama.toUpperCase();});F.perihal="PERMOHONAN PERSETUJUAN "+J.nama.toUpperCase();renderAjukan();}}catch(e){}return r;})(fillContoh);
 
 /* Subkontrak Aircraft Cleaning: bukan kartu sendiri — masuk lewat kartu Pengajuan SDM / Alih Daya (HC·HM, UST OP) */
-SDMTILE.ket="Penambahan SDM, subkontrak (mis. aircraft cleaning), penyesuaian tarif, pengadaan baru, perpanjangan, masa transisi, repeat order";
-if(!FUNGSI.some(f=>/aircraft clean/i.test(f[0])))FUNGSI.push(["Aircraft Cleaning (Cleaner)","OP",1]);
+/* subkon ditentukan oleh kode akun yang dipilih di form SDM (mis. 6700101 Beban Subkontrak — Aircraft Cleaning → UST OP) */
+["sdmops","sdm","ump"].forEach(j=>{const A=JENIS[j]&&JENIS[j].akun;if(Array.isArray(A)&&!A.some(x=>x[0]==="6700101"))A.push(["6700101","Beban Subkontrak — Aircraft Cleaning"]);});
+const AKUST={"6700101":"OP"};
+onInp8=(o=>function(e,t,ds){const r=o(e,t,ds);try{if(F&&isSdmJ(F.j)&&ds&&ds.ik==="akun"&&ds.it!==undefined){const it=F.items[+ds.it];if(it&&AKUST[it.akun]&&!it.ust){it.ust=AKUST[it.akun];sdmSyncUst();renderAjukan();}}}catch(_){}return r;})(onInp8);
 tilesHtml=(o=>function(tiles,q){const hc=tiles.some(([k])=>k==="cleaning");let T=tiles.filter(([k])=>k!=="cleaning");if(hc&&!T.some(([k])=>isSdmJ(k)))T.push(["sdmops",JENIS.sdmops]);return o(T,q);})(tilesHtml);
 
 </script>
