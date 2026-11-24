@@ -1624,6 +1624,14 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tbxbar button:hover{background:#e9f6ec;border-color:#9fd3ad}.tbxbar button[data-tbx^=d]:hover{background:#fdecea;border-color:#f3b1aa}
 .rte table td:focus-within,.rte table th:focus-within{outline:2px solid #3b82f6;outline-offset:-2px}
 .rte table td,.page .feTb table td{height:26px}
+.rte td.tsel,.rte th.tsel{background-image:linear-gradient(rgba(59,130,246,.22),rgba(59,130,246,.22))!important;outline:1px solid rgba(37,99,235,.55);outline-offset:-1px}
+.rte td.tsel::selection,.rte td.tsel *::selection{background:transparent}
+.tbxbar .tbxc{display:inline-flex;align-items:center;gap:3px;border:1px solid #e1e6ed;background:#f7f9fc;border-radius:7px;padding:2px 6px;font-size:12px;cursor:pointer}
+.tbxbar .tbxc input{width:22px;height:18px;border:0;padding:0;background:none;cursor:pointer}
+.tbxbar .tbxh{flex-basis:100%;font-size:10.5px;color:#6b7280;padding:2px 6px 0}
+.tbxbar{position:static!important;box-shadow:none;border-radius:0;border-width:0 0 1px;max-width:none;background:#f5f8fc;padding:6px 8px}
+.tbxbar.off button,.tbxbar.off .tbxc{opacity:.45;pointer-events:none}
+.tbxbar.off .tbxh::before{content:"Klik sel tabel untuk mengaktifkan alat tabel · "}
 </style>
 </head>
 <body>
@@ -6529,6 +6537,53 @@ function tbxDo(k){const td=TBX.td;if(!td||!td.isConnected)return;const tr=td.par
  ed.dispatchEvent(new Event("input",{bubbles:true}));if(typeof rteSync==="function")try{rteSync();}catch(_){}TBX.td=null;setTimeout(tbxShow,0);}
 document.addEventListener("selectionchange",()=>{clearTimeout(TBX.tm);TBX.tm=setTimeout(tbxShow,60);});
 window.addEventListener("scroll",()=>{if(TBX.td)tbxShow();},true);
+
+/* ===== Tabel ala Word: blok beberapa sel (seret mouse / Shift+klik), gabung sel terpilih, hapus isi, warnai sel, ubah lebar kolom ===== */
+const TSL={a:null,b:null,on:false,drag:false,rs:null};
+function tGrid(tb){const G=[];[...tb.rows].forEach((r,ri)=>{G[ri]=G[ri]||[];let ci=0;[...r.cells].forEach(c=>{while(G[ri][ci])ci++;for(let y=0;y<(c.rowSpan||1);y++)for(let x=0;x<(c.colSpan||1);x++){(G[ri+y]=G[ri+y]||[])[ci+x]=c;}ci+=c.colSpan||1;});});return G;}
+function tPos(G,c){for(let r=0;r<G.length;r++)for(let k=0;k<(G[r]||[]).length;k++)if(G[r][k]===c)return [r,k];return null;}
+function tSelCells(){return [...document.querySelectorAll(".rte td.tsel,.rte th.tsel")];}
+function tClear(){tSelCells().forEach(c=>c.classList.remove("tsel"));}
+function tMark(){tClear();const A=TSL.a,B=TSL.b;if(!A||!B||A===B||A.closest("table")!==B.closest("table"))return;const tb=A.closest("table"),G=tGrid(tb),p=tPos(G,A),q=tPos(G,B);if(!p||!q)return;
+ let r0=Math.min(p[0],q[0]),r1=Math.max(p[0],q[0]),c0=Math.min(p[1],q[1]),c1=Math.max(p[1],q[1]);
+ for(let r=r0;r<=r1;r++)for(let k=c0;k<=c1;k++){const c=G[r]&&G[r][k];if(c)c.classList.add("tsel");}
+ const s=getSelection();try{const rg=document.createRange();const L=tSelCells();rg.setStart(L[0],0);rg.setEnd(L[L.length-1],L[L.length-1].childNodes.length);s.removeAllRanges();s.addRange(rg);}catch(_){}}
+document.addEventListener("mousedown",e=>{const td=e.target.closest&&e.target.closest(".rte[contenteditable=true] td,.rte[contenteditable=true] th");
+ if(TSL.rs)return;if(!td){if(!(e.target.closest&&e.target.closest(".tbxbar,.ndrte .rg,.ndrte button,.ndrte select,.ndrte input")))tClear();return;}
+ const r=td.getBoundingClientRect();if(e.clientX>r.right-5){e.preventDefault();const tb=td.closest("table"),G=tGrid(tb),pos=tPos(G,td);TSL.rs={tb,col:pos[1]+(td.colSpan||1)-1,x:e.clientX,w:r.width};return;}
+ if(e.shiftKey&&TSL.a&&TSL.a.closest("table")===td.closest("table")){e.preventDefault();TSL.b=td;tMark();return;}
+ tClear();TSL.a=td;TSL.b=td;TSL.drag=true;},true);
+document.addEventListener("mousemove",e=>{if(TSL.rs){const R=TSL.rs,w=Math.max(30,R.w+e.clientX-R.x),G=tGrid(R.tb);G.forEach(row=>{const c=row[R.col];if(c&&(c.colSpan||1)===1)c.style.width=w+"px";});R.tb.style.tableLayout="fixed";return;}
+ const td=e.target.closest&&e.target.closest(".rte[contenteditable=true] td,.rte[contenteditable=true] th");
+ if(td){const r=td.getBoundingClientRect();td.style.cursor=e.clientX>r.right-5?"col-resize":"";}
+ if(!TSL.drag||!td||td===TSL.b)return;if(td.closest("table")!==(TSL.a&&TSL.a.closest("table")))return;TSL.b=td;tMark();});
+document.addEventListener("mouseup",()=>{if(TSL.rs){const ed=TSL.rs.tb.closest(".rte");TSL.rs=null;ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}TSL.drag=false;});
+document.addEventListener("keydown",e=>{const L=tSelCells();if(L.length<2)return;if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();L.forEach(c=>c.innerHTML="<br>");const ed=L[0].closest(".rte");ed.dispatchEvent(new Event("input",{bubbles:true}));}
+ else if(e.key==="Escape")tClear();},true);
+/* tombol tambahan di bilah Tabel: gabung sel terpilih, warna sel, perataan */
+tbxBar=(o=>function(){const had=!!TBX.el,d=o();if(had)return d;d.insertAdjacentHTML("beforeend",`<button type="button" data-tbx2="merge">⊞ Gabung sel terblok</button><button type="button" data-tbx2="split">⊟ Pisah sel</button><label class="tbxc" title="Warna latar sel">🎨<input type="color" value="#DBEAFE" data-tbx2="bg"></label><button type="button" data-tbx2="bg0">Tanpa warna</button><button type="button" data-tbx2="al" data-v="left">⯇</button><button type="button" data-tbx2="al" data-v="center">≡</button><button type="button" data-tbx2="al" data-v="right">⯈</button><span class="tbxh">Seret mouse / Shift+klik untuk blok sel · seret garis kanan sel untuk lebar kolom</span>`);
+ d.addEventListener("mousedown",e=>{const b=e.target.closest("[data-tbx2]");if(!b||b.tagName==="INPUT")return;e.preventDefault();tbx2(b.dataset.tbx2,b.dataset.v);});
+ d.addEventListener("input",e=>{const b=e.target.closest("[data-tbx2=bg]");if(b)tbx2("bg",b.value);});return d;})(tbxBar);
+function tTargets(){const L=tSelCells();return L.length?L:(TBX.td?[TBX.td]:[]);}
+function tbx2(k,v){const L=tTargets();if(!L.length)return;const ed=L[0].closest(".rte");
+ if(k==="merge"&&L.length>1){const tb=L[0].closest("table"),G=tGrid(tb),P=L.map(c=>tPos(G,c));const r0=Math.min(...P.map(p=>p[0])),c0=Math.min(...P.map(p=>p[1]));
+  let r1=0,c1=0;L.forEach((c,i)=>{r1=Math.max(r1,P[i][0]+(c.rowSpan||1)-1);c1=Math.max(c1,P[i][1]+(c.colSpan||1)-1);});const keep=G[r0][c0];
+  const txt=L.filter(c=>c!==keep&&c.textContent.trim()).map(c=>c.innerHTML);L.forEach(c=>{if(c!==keep)c.remove();});keep.rowSpan=r1-r0+1;keep.colSpan=c1-c0+1;if(txt.length)keep.innerHTML+=" "+txt.join(" ");tClear();}
+ else if(k==="split"){L.forEach(c=>{const cs=c.colSpan||1,rs=c.rowSpan||1;if(cs>1){for(let i=1;i<cs;i++){const n=c.cloneNode(false);n.colSpan=1;n.rowSpan=rs;n.innerHTML="<br>";c.after(n);}c.colSpan=1;}if(rs>1){const tb=c.closest("table"),G=tGrid(tb),p=tPos(G,c);for(let y=1;y<rs;y++){const row=tb.rows[p[0]+y];if(!row)continue;const n=c.cloneNode(false);n.rowSpan=1;n.colSpan=1;n.innerHTML="<br>";let ref=null;for(let k2=p[1]+1;k2<(G[p[0]+y]||[]).length;k2++){const cc=G[p[0]+y][k2];if(cc&&cc.parentNode===row&&cc!==c){ref=cc;break;}}row.insertBefore(n,ref);}c.rowSpan=1;}});}
+ else if(k==="bg")L.forEach(c=>c.style.background=v);else if(k==="bg0")L.forEach(c=>{c.style.background="";});else if(k==="al")L.forEach(c=>c.style.textAlign=v);
+ ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));if(typeof rteSync==="function")try{rteSync();}catch(_){}setTimeout(tbxShow,0);}
+/* bilah tetap tampil saat ada sel terblok */
+tbxShow=(o=>function(){const L=tSelCells();if(L.length>1){const b=tbxBar();TBX.td=L[0];const t=L[0].closest("table").getBoundingClientRect();b.style.display="flex";b.style.top=Math.max(8,t.top+scrollY-b.offsetHeight-6)+"px";b.style.left=Math.max(8,Math.min(t.left+scrollX,document.documentElement.clientWidth-b.offsetWidth-8))+"px";return;}return o();})(tbxShow);
+/* bilah Tabel ditempel di bawah toolbar editor (tidak menutupi isi tabel) */
+tbxShow=function(){const b=tbxBar(),L=tSelCells(),td=L.length>1?L[0]:tbxCell();if(!td){b.style.display="none";TBX.td=null;return;}TBX.td=td;const ed=td.closest(".rte");if(!ed)return;
+ if(b.nextElementSibling!==ed)ed.before(b);b.style.display="flex";};
+tbxShow=function(){const b=tbxBar(),L=tSelCells(),td=L.length>1?L[0]:tbxCell();
+ if(!td){TBX.td=null;const ed=b.nextElementSibling;if(ed&&ed.classList&&ed.classList.contains("rte")&&ed.isConnected&&ed.querySelector("table")){b.style.display="flex";b.classList.add("off");}else b.style.display="none";return;}
+ TBX.td=td;const ed=td.closest(".rte");if(!ed)return;if(b.nextElementSibling!==ed)ed.before(b);b.style.display="flex";b.classList.remove("off");};
+renderContrib=(o=>function(p){o(p);const ed=document.getElementById("feEd");if(ed){const b=tbxBar();ed.before(b);b.style.display="flex";b.classList.add("off");}})(renderContrib);
+/* cegah seret-pindah (drag & drop) isi tabel saat memblok sel */
+document.addEventListener("dragstart",e=>{const t=e.target.nodeType===3?e.target.parentElement:e.target;if(t&&t.closest&&t.closest(".rte table"))e.preventDefault();},true);
+document.addEventListener("mousedown",e=>{const td=e.target.closest&&e.target.closest(".rte[contenteditable=true] td,.rte[contenteditable=true] th");if(td&&!e.shiftKey&&tSelCells().length){try{getSelection().removeAllRanges();}catch(_){}}},true);
 
 </script>
 </body>
