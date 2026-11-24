@@ -5097,7 +5097,7 @@ renderContrib=(o=>function(p){o(p);const c=myCollab(p);if(!c)return;const B=$("#
  if(c.st==="wait"&&!hasDispU(p,c.unit)){const inf=[...B.querySelectorAll(".info")].pop();const msg=disRU(p,c.unit)?`Menunggu disposisi Reviewer Div.Head PPJA ${c.unit} (${REVN[c.unit]}) ke Admin.`:`Menunggu disposisi Approver (GH) PPJA ${c.unit} ke Reviewer Div.Head.`;
   if(inf)inf.innerHTML=`<div>${esc(msg)} Admin PPJA ${c.unit} mulai mengisi setelah disposisi diterima.</div>`;}})(renderContrib);
 JENIS.gse.badge="OT·OP";
-JENIS.cleaning.unit="OT";JENIS.cleaning.badge="OT·OP";
+JENIS.cleaning.unit="HC";JENIS.cleaning.badge="HC·HM";
 
 /* ================= VERIFIKASI PPJA ================= */
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -6355,6 +6355,31 @@ syState=(o=>function(s){o(s);const el=document.getElementById("syncB"),bell=docu
 function docFit(){const M=document.getElementById("docModal"),P=document.getElementById("docPages");if(!M||!P)return;const mob=window.innerWidth<=760;M.classList.toggle("fitm",mob);
  P.querySelectorAll(".page").forEach(pg=>{if(!mob){pg.style.zoom="";return;}const w=pg.classList.contains("land")?1123:794,av=Math.max(240,P.clientWidth-4);pg.style.zoom=String(Math.min(1,av/w));});}
 (()=>{const P=document.getElementById("docPages");if(P)new MutationObserver(()=>requestAnimationFrame(docFit)).observe(P,{childList:true});window.addEventListener("resize",()=>{docFit();syState(SY.st);});})();
+
+/* ===== Kartu "Pengajuan Konsultan" (menggantikan kartu KF) → pop-up pilihan jenis konsultan / audit, PPJA mengikuti jenisnya ===== */
+const KONS=[["kons_kf","Konsultan Keuangan","6767000","G&A - Beban Jasa Konsultan Keuangan","KF"],["kons_iso","Konsultan ISO 9000","6767001","G&A - Beban Jasa Konsultan ISO 9000","UQ"],
+ ["kons_man","Konsultan Manajemen","6767002","G&A - Beban Jasa Konsultan Manajemen","US"],["kons_hkm","Konsultan Hukum","6767003","G&A - Beban Jasa Konsultan Hukum","UL"],
+ ["kons_sdm","Konsultan SDM","6767004","G&A - Beban Jasa Konsultan SDM","HM"],["aud_kf","Audit Keuangan","6767100","G&A - Beban Jasa Audit Keuangan","KF"],["aud_iso","Audit ISO 9000","6767101","G&A - Beban Jasa Audit ISO 9000","UQ"]];
+(()=>{const B=JENIS.counter;KONS.forEach(([k,n,a,an,u])=>{if(JENIS[k])return;JENIS[k]={...B,nama:n,ket:`Pengajuan jasa ${n.toLowerCase()} — PPJA ${u}`,unit:u,badge:undefined,akun:[[a,an]],kons:1};});})();
+const KONSTILE={nama:"Pengajuan Konsultan",ket:"Konsultan keuangan, ISO 9000, manajemen, hukum, SDM, serta audit keuangan & ISO 9000",unit:"KF",badge:"KONSULTAN",out:JENIS.counter.out};
+let KONSPOP=false;
+tilesHtml=(o=>function(tiles,q){const had=tiles.some(([k])=>k==="counter"||(JENIS[k]&&JENIS[k].kons));let T=tiles.filter(([k])=>k!=="counter"&&!(JENIS[k]&&JENIS[k].kons));
+ if(had||(q&&"konsultan audit iso keuangan hukum manajemen".includes(q)))T.push(["konsx",KONSTILE]);
+ const ci=T.findIndex(([k])=>k==="cleaning");if(ci>=0)T[ci]=["cleaning",{...T[ci][1],unit:"HC",badge:"HC·HM"}];return o(T,q);})(tilesHtml);
+function konsPopHtml(){return `<div class="kpop" id="konsPop"><div class="kpb"><div class="kph"><b>Pengajuan Konsultan</b><button class="btn ghost sm" data-act="konsX">✕</button></div>
+ <div class="kpg"><label>Pilih jenis konsultan / audit <span class="req">*</span></label><div class="gkg">${KONS.map(([k,n,a,an,u])=>`<button class="gkb" data-act="konsPick" data-j="${k}" style="text-align:left"><b>${n}</b><span class="mut" style="display:block;font-size:11.5px;margin-top:2px">${a} · PPJA ${u}</span></button>`).join("")}</div></div>
+ <div class="kpf"><button class="btn ghost sm" data-act="konsX">Batal</button></div></div></div>`;}
+function fakeAct(act,ds){const b=document.createElement("button");b.dataset.act=act;Object.assign(b.dataset,ds);b.style.display="none";(document.querySelector("#v-ajukan")||document.body).appendChild(b);b.click();b.remove();}
+onAct8=(o=>function(act,a){
+ if(act==="jenis"&&a&&a.dataset.j==="konsx"){const w=document.createElement("div");w.id="konsPopW";w.innerHTML=konsPopHtml();document.body.appendChild(w);return true;}
+ if(act==="konsX"){const w=document.getElementById("konsPopW");if(w)w.remove();return true;}
+ if(act==="konsPick"){const j=a.dataset.j,w=document.getElementById("konsPopW");if(w)w.remove();setTimeout(()=>fakeAct("jenis",{j}),0);return true;}
+ /* Subkontrak Aircraft Cleaning → alur SDM/alih daya HC·HM dengan OP sebagai UST */
+ if(act==="jenis"&&a&&a.dataset.j==="cleaning"){const q=F&&F.q;F=newF("sdmops");F.q=q;sdmPick("baru","ops","paket");
+  F.perihal="PERMOHONAN VERIFIKASI & ENGINEERING ESTIMATE SUBKONTRAK AIRCRAFT CLEANING";const it=F.items[0];if(it){it.uraian="AIRCRAFT CLEANER";it.ust="OP";}
+  if(typeof sdmSyncUst==="function")sdmSyncUst();renderAjukan();toast("Subkontrak Aircraft Cleaning diproses sebagai pengajuan SDM / alih daya (HC·HM) dengan UST OP.");return true;}
+ return o.apply(this,arguments);})(onAct8);
+fillContoh=(o=>function(){const r=o.apply(this,arguments);try{const J=F&&JENIS[F.j];if(J&&J.kons){F.items.forEach(it=>{it.akun=J.akun[0][0];it.uraian="JASA "+J.nama.toUpperCase();});F.perihal="PERMOHONAN PERSETUJUAN "+J.nama.toUpperCase();renderAjukan();}}catch(e){}return r;})(fillContoh);
 
 </script>
 </body>
