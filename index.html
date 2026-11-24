@@ -1632,6 +1632,27 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tbxbar{position:static!important;box-shadow:none;border-radius:0;border-width:0 0 1px;max-width:none;background:#f5f8fc;padding:6px 8px}
 .tbxbar.off button,.tbxbar.off .tbxc{opacity:.45;pointer-events:none}
 .tbxbar.off .tbxh::before{content:"Klik sel tabel untuk mengaktifkan alat tabel · "}
+/* bilah Tabel gaya ribbon */
+.tbxbar.rb{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;padding:4px 6px 0;background:#f5f8fc;border-bottom:1px solid #dfe5ee}
+.tbxbar.rb .tbg{display:flex;flex-direction:column;justify-content:space-between;padding:2px 10px 0;border-right:1px solid #dfe5ee}
+.tbxbar.rb .tbr{display:flex;align-items:flex-start;gap:2px}
+.tbxbar.rb .tbl2{text-align:center;font-size:11px;color:#6b7280;padding:3px 0 4px}
+.tbxbar.rb .tbb{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid transparent;background:none;border-radius:6px;padding:4px 6px;font-size:11.5px;line-height:1.15;color:#1f2937;cursor:pointer;min-width:62px;white-space:normal;text-align:center}
+.tbxbar.rb .tbb:hover{background:#e6eef8;border-color:#c9d8ec}
+.tbxbar.rb .tbi{display:block;height:28px}
+.tbxbar.rb .tbcol{display:flex;flex-direction:column;gap:3px;padding:2px 4px}
+.tbxbar.rb .tbsm{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;background:none;border-radius:6px;padding:3px 6px;font-size:11.5px;color:#1f2937;cursor:pointer;white-space:nowrap}
+.tbxbar.rb .tbsm:hover{background:#e6eef8;border-color:#c9d8ec}
+.tbxbar.rb .tbsm input{width:0;height:0;opacity:0;position:absolute}.tbxbar.rb label.tbsm{position:relative}
+.tbxbar.rb .sw{width:14px;height:14px;border:1px solid #9aa4b2;border-radius:3px;background:#DBEAFE}
+.tbxbar.rb .tbal{display:flex;gap:2px}.tbxbar.rb .tbal button{border:1px solid #dfe5ee;background:#fff;border-radius:5px;padding:2px 8px;font-size:12px;cursor:pointer}
+.tbxbar.rb .tbal button:hover{background:#e6eef8}
+.tbxbar.rb .tbdd{position:relative}.tbxbar.rb .tbmenu{display:none;position:absolute;top:100%;left:0;z-index:130;background:#fff;border:1px solid #cfd8e3;border-radius:8px;box-shadow:0 8px 24px rgba(15,40,80,.18);padding:4px;min-width:170px}
+.tbxbar.rb .tbdd.open .tbmenu{display:flex;flex-direction:column}.tbxbar.rb .tbmenu button{border:0;background:none;text-align:left;padding:6px 10px;font-size:12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.tbxbar.rb .tbmenu button:hover{background:#fdecea}
+.tbxbar.rb .tbhint{flex-basis:100%;font-size:10.5px;color:#6b7280;padding:3px 8px 5px;border-top:1px dashed #e3e8ef}
+.tbxbar.rb.off .tbb,.tbxbar.rb.off .tbsm,.tbxbar.rb.off .tbal{opacity:.45;pointer-events:none}
+.tbxbar.rb .tbxh,.tbxbar.rb .tbxl{display:none}
 </style>
 </head>
 <body>
@@ -6584,6 +6605,39 @@ renderContrib=(o=>function(p){o(p);const ed=document.getElementById("feEd");if(e
 /* cegah seret-pindah (drag & drop) isi tabel saat memblok sel */
 document.addEventListener("dragstart",e=>{const t=e.target.nodeType===3?e.target.parentElement:e.target;if(t&&t.closest&&t.closest(".rte table"))e.preventDefault();},true);
 document.addEventListener("mousedown",e=>{const td=e.target.closest&&e.target.closest(".rte[contenteditable=true] td,.rte[contenteditable=true] th");if(td&&!e.shiftKey&&tSelCells().length){try{getSelection().removeAllRanges();}catch(_){}}},true);
+
+/* ===== Bilah Tabel bergaya ribbon Word: Rows & Columns · Merge · Cell ===== */
+function tIco(k){const g=(hl)=>{let s='';for(let r=0;r<3;r++)for(let c=0;c<3;c++){const on=hl(r,c);s+=`<rect x="${3+c*7}" y="${5+r*6}" width="7" height="6" fill="${on?"#9cc3ef":"#fff"}" stroke="#4b5563" stroke-width="1"/>`;}return s;};
+ const ar=(d)=>`<path d="${d}" fill="none" stroke="#1f2937" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const M={rA:g(r=>r===0)+ar("M28 9V2M25 5l3-3 3 3"),rB:g(r=>r===2)+ar("M28 16v7M25 20l3 3 3-3"),cL:g((r,c)=>c===0)+ar("M2 2v0"),cR:g((r,c)=>c===2),
+  del:g(()=>0)+'<path d="M20 18l8 8M28 18l-8 8" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"/>',
+  merge:'<rect x="3" y="5" width="21" height="18" fill="#fff" stroke="#4b5563"/><rect x="3" y="11" width="21" height="6" fill="#9cc3ef" stroke="#4b5563"/>'+ar("M7 14h13M17 11.5l3 2.5-3 2.5M10 11.5L7 14l3 2.5"),
+  split:'<rect x="3" y="5" width="21" height="18" fill="#fff" stroke="#4b5563"/><path d="M13.5 5v18" stroke="#4b5563"/><rect x="3" y="11" width="21" height="6" fill="#9cc3ef" fill-opacity=".6" stroke="#4b5563"/>',
+  al:'<path d="M5 7h18M5 12h12M5 17h18M5 22h12" stroke="#374151" stroke-width="1.8" stroke-linecap="round"/>'};
+ let s=M[k]||g(()=>0);if(k==="cL")s=g((r,c)=>c===0)+ar("M2 14h0");return `<svg viewBox="0 0 32 28" width="30" height="26">${s}${k==="cL"?'<path d="M1 14h-0" />':""}</svg>`;}
+tbxBar=function(){if(TBX.el)return TBX.el;const d=document.createElement("div");d.className="tbxbar rb";
+ const big=(k,a,l,ico)=>`<button type="button" class="tbb" ${a}><span class="tbi">${tIco(ico||k)}</span><span>${l}</span></button>`;
+ d.innerHTML=`<div class="tbg"><div class="tbr">
+   <div class="tbdd"><button type="button" class="tbb" data-tbxm="del"><span class="tbi">${tIco("del")}</span><span>Hapus ▾</span></button>
+    <div class="tbmenu"><button type="button" data-tbx="dR">✕ Hapus baris</button><button type="button" data-tbx="dC">✕ Hapus kolom</button><button type="button" data-tbx2="clr">⌫ Kosongkan isi sel</button><button type="button" data-tbx="dT">🗑 Hapus tabel</button></div></div>
+   ${big("rA",'data-tbx="rA"',"Sisip Baris<br>Atas")}${big("rB",'data-tbx="rB"',"Sisip Baris<br>Bawah")}${big("cL",'data-tbx="cL"',"Sisip Kolom<br>Kiri")}${big("cR",'data-tbx="cR"',"Sisip Kolom<br>Kanan")}</div><div class="tbl2">Baris &amp; Kolom</div></div>
+  <div class="tbg"><div class="tbr">${big("merge",'data-tbx2="merge"',"Gabung<br>Sel")}${big("split",'data-tbx2="split"',"Pisah<br>Sel")}</div><div class="tbl2">Gabung</div></div>
+  <div class="tbg"><div class="tbr"><div class="tbcol"><label class="tbsm" title="Warna latar sel"><span class="sw"></span>Warna sel<input type="color" value="#DBEAFE" data-tbx2="bg"></label><button type="button" class="tbsm" data-tbx2="bg0">⬜ Tanpa warna</button></div>
+   <div class="tbcol"><span class="tbal"><button type="button" data-tbx2="al" data-v="left" title="Rata kiri">⯇</button><button type="button" data-tbx2="al" data-v="center" title="Rata tengah">≡</button><button type="button" data-tbx2="al" data-v="right" title="Rata kanan">⯈</button></span><button type="button" class="tbsm" data-tbx="mg">⇔ Gabung ke kanan</button></div></div><div class="tbl2">Sel</div></div>
+  <div class="tbhint">Seret mouse / Shift+klik untuk blok sel · seret garis kanan sel untuk lebar kolom</div>`;
+ d.addEventListener("mousedown",e=>{const m=e.target.closest("[data-tbxm]");if(m){e.preventDefault();m.parentNode.classList.toggle("open");return;}
+  const b=e.target.closest("[data-tbx]");if(b){e.preventDefault();d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));tbxDo(b.dataset.tbx);return;}
+  const c=e.target.closest("[data-tbx2]");if(c&&c.tagName!=="INPUT"&&!c.closest("label")){e.preventDefault();d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));if(c.dataset.tbx2==="clr"){tTargets().forEach(x=>x.innerHTML="<br>");const ed=TBX.td&&TBX.td.closest(".rte");ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}else tbx2(c.dataset.tbx2,c.dataset.v);}});
+ d.addEventListener("input",e=>{const b=e.target.closest("[data-tbx2=bg]");if(b){d.querySelector(".sw").style.background=b.value;tbx2("bg",b.value);}});
+ document.addEventListener("mousedown",e=>{if(!e.target.closest||!e.target.closest(".tbdd"))d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));});
+ TBX.el=d;return d;};
+function tIco(k){const g=hl=>{let s='';for(let r=0;r<3;r++)for(let c=0;c<3;c++)s+=`<rect x="${2+c*7}" y="${6+r*6}" width="7" height="6" fill="${hl(r,c)?"#9cc3ef":"#fff"}" stroke="#4b5563" stroke-width="1"/>`;return s;};
+ const a=d=>`<path d="${d}" fill="none" stroke="#1f2937" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const M={rA:g(r=>r===0)+a("M28 13V3M25 6l3-3 3 3"),rB:g(r=>r===2)+a("M28 13v10M25 20l3 3 3-3"),cL:g((r,c)=>c===0)+a("M31 3h-8M26 0.5L23 3l3 2.5"),cR:g((r,c)=>c===2)+a("M23 3h8M28 0.5L31 3l-3 2.5"),
+  del:g(()=>0)+'<path d="M20 17l9 9M29 17l-9 9" stroke="#dc2626" stroke-width="2.4" stroke-linecap="round"/>',
+  merge:'<rect x="2" y="6" width="21" height="18" fill="#fff" stroke="#4b5563"/><rect x="2" y="12" width="21" height="6" fill="#9cc3ef" stroke="#4b5563"/>'+a("M6 15h13M16 12.5l3 2.5-3 2.5M9 12.5L6 15l3 2.5"),
+  split:'<rect x="2" y="6" width="21" height="18" fill="#fff" stroke="#4b5563"/><rect x="2" y="12" width="21" height="6" fill="#9cc3ef" stroke="#4b5563"/><path d="M12.5 6v18" stroke="#1f2937" stroke-width="1.6" stroke-dasharray="2 1.5"/>'};
+ return `<svg viewBox="0 0 32 28" width="32" height="28">${M[k]||g(()=>0)}</svg>`;}
 
 </script>
 </body>
