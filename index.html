@@ -6389,6 +6389,16 @@ const AKUST={"6700101":"OP"};
 onInp8=(o=>function(e,t,ds){const r=o(e,t,ds);try{if(F&&isSdmJ(F.j)&&ds&&ds.ik==="akun"&&ds.it!==undefined){const it=F.items[+ds.it];if(it&&AKUST[it.akun]&&!it.ust){it.ust=AKUST[it.akun];sdmSyncUst();renderAjukan();}}}catch(_){}return r;})(onInp8);
 tilesHtml=(o=>function(tiles,q){const hc=tiles.some(([k])=>k==="cleaning");let T=tiles.filter(([k])=>k!=="cleaning");if(hc&&!T.some(([k])=>isSdmJ(k)))T.push(["sdmops",JENIS.sdmops]);return o(T,q);})(tilesHtml);
 
+/* ===== Kotak SPPD / Perjalanan Dinas — PPJA HC, keluaran surat balasan + EE ===== */
+if(!JENIS.sppd)JENIS.sppd={...JENIS.seragam,nama:"SPPD / Perjalanan Dinas",ket:"Tiket, akomodasi, uang harian & transport perjalanan dinas",unit:"HC",out:"EE",badge:undefined,
+ akun:[["SPPD","Beban Perjalanan Dinas (kode akun menyusul)"]],
+ fields:[F_("tujuan","Kota / bandara tujuan"),F_("peserta","Peserta (nama / jumlah)"),F_("periode","Tanggal berangkat – kembali"),F_("keperluan","Keperluan dinas")],
+ menindak:"",ex:{tujuan:"DENPASAR (DPS)",peserta:"2 ORANG — STAF OPERASIONAL",periode:"10 S.D. 12 DESEMBER 2026",keperluan:"PENDAMPINGAN AUDIT INTERNAL CABANG DPS"},
+ items:[{akun:"SPPD",uraian:"TIKET PESAWAT PP CGK – DPS",qty:2,sat:"ORANG",harga:3200000,dasar:"PERJALANAN DINAS SESUAI SURAT TUGAS"},
+  {akun:"SPPD",uraian:"PENGINAPAN / HOTEL",qty:4,sat:"MALAM",harga:750000,dasar:"2 ORANG × 2 MALAM"},
+  {akun:"SPPD",uraian:"UANG HARIAN",qty:6,sat:"HARI",harga:350000,dasar:"2 ORANG × 3 HARI"},
+  {akun:"SPPD",uraian:"TRANSPORT LOKAL",qty:2,sat:"ORANG",harga:400000,dasar:"BANDARA – HOTEL – LOKASI PP"}]};
+
 </script>
 </body>
 </html>
