@@ -6399,6 +6399,9 @@ if(!JENIS.sppd)JENIS.sppd={...JENIS.seragam,nama:"SPPD / Perjalanan Dinas",ket:"
   {akun:"SPPD",uraian:"UANG HARIAN",qty:6,sat:"HARI",harga:350000,dasar:"2 ORANG × 3 HARI"},
   {akun:"SPPD",uraian:"TRANSPORT LOKAL",qty:2,sat:"ORANG",harga:400000,dasar:"BANDARA – HOTEL – LOKASI PP"}]};
 
+/* Menu Ajukan: baris filter "PPJA:" dihapus; kotak PPJA UL (Review Kontrak & Perjanjian) dihapus */
+tilesHtml=(o=>function(tiles,q){const T=tiles.filter(([k,x])=>!(x&&x.unit==="UL"&&!x.kons));return o(T,q).replace(/<div class="tleg">[\s\S]*?<\/div>\s*/,"");})(tilesHtml);
+
 </script>
 </body>
 </html>
