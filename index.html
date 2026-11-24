@@ -1717,6 +1717,12 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .rib .tbxrg .tbi2 .tlab{font-size:11px;color:#1e293b;margin-left:3px}
 .rib .tbxrg .tbi2 svg{flex:none}
 .rib .tbxrg .rrow{flex-wrap:nowrap}.rib .tbxrg .tbi2{flex:none}
+.rolesw{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:10px;background:#f0f7ff;border:1px solid #cfe0f5}
+.rolesw>span{flex:1;min-width:220px;font-size:12.5px;color:#334}
+.rsw{display:inline-flex;border:1px solid #b9cde6;border-radius:8px;overflow:hidden}
+.rsw button{border:0;background:#fff;padding:7px 12px;font:600 12.5px inherit;font-family:inherit;cursor:pointer;color:#2b4a6f;border-left:1px solid #d6e2f0}
+.rsw button:first-child{border-left:0}.rsw button.on{background:#1f4e8c;color:#fff}
+.rsw button i{font-style:normal;background:#e11d48;color:#fff;border-radius:9px;padding:0 6px;margin-left:4px;font-size:11px}
 </style>
 </head>
 <body>
@@ -2211,35 +2217,47 @@ const ADMN={OT:"SINTA MAHARANI",HT:"YOGA PRATAMA",HC:"NURUL HIDAYAH",US:"DEDI KU
 const REVN={},TEAM={};(()=>{const F1=["ARYA","BUDI","CITRA","DIMAS","EKA","FAJAR","GITA","HENDRO","IKA","JOKO","KARINA","LUKMAN","MIRA","NANDA","OKTA","PUTRI","RAFI","SALSA","TAUFIK","VINA","WAHYU","YOGI"],L1=["SANTOSO","WIBISONO","PERMANA","HALIM","SUSANTO","NUGRAHA","KUSUMA","RAMADHAN","PRASETYA","LESMANA","HARDIANTO","SAPUTRI"];
  Object.keys(ADMN).forEach((u,i)=>{REVN[u]=u==="OT"?"PALUPI MULYANTIANA":F1[(i*5+3)%F1.length]+" "+L1[(i*7+2)%L1.length];TEAM[u]=[ADMN[u],F1[(i*3+1)%F1.length]+" "+L1[(i*5+4)%L1.length],F1[(i*7+9)%F1.length]+" "+L1[(i*3+8)%L1.length]];});})();
 
-/* Nama asli dari Master Data Karyawan (hanya akun yang relevan; yang tidak ada padanannya tetap nama simulasi) */
-(()=>{const U={ // unit: [admin, admin2, admin3, reviewer DH, approver GH] — null = tetap
- OT:["IANDA FAHMI NURRIDHO","I WAYAN MURTANA","A A NGURAH RIDO WAHYUDI",null,null],
- HT:["SISWANTO FAJARUDIN",null,null,"ERNI ERAWATI PERTIWI",null],
- HC:["WULAN DHARI A","RAHMI LAILANI","ANANDA YULIA RAHMA PUTRI","SENDIKA PANJI ANOM",null],
- US:[null,null,null,"YUSSY MAGDALENA","DEWI KUMALA SARI SALAHUDDIN"],
- OIT:["RUTH MARGARETH","RAKA FADIL DWI ANANDA","AMRI MUNI",null,null],
- OP:["ROMI FAHJANA","LESTARI MUSTIKA N. W.","ANISA NURASRI JUANDA","RIZKI ILHAMI ASER","WASONO WALUYO BADRUDIN"],
- KR:["M REVO NADRIAN","ASIH IRAWATI","SITI AISYAH NATASHA AFIRANDINI",null,null],
- KF:["KIKI RIZKY AMELIA","ANDI SUPRATMAN","RIZKI LISA TRIANI","IRA MULIARA","IGN. B. SURYAWAN W."],
- UQ:["HARTOYO","RAMADHA TRI HARRY MURTI","ANGGI FITRI YULIANTI","BUDI MULYONO","NGAKAN MADE WIDIATMIKA"],
- UL:["ANDI SASAWATY PATURUSI","MUHAMMAD FAIZAL FUAD","INDRI PUSPITASARI","MASTA MARLISE P.","I GST. BGS. PARTA D."],
- KC:["ANIEK NURAMIATI","SHELLA DEWI ANGGRAINI","MIRA HALIM","EVAN RAMADHAN",null],
- HM:["NADIA ASTI RAHMAWATI",null,"VINA HALIM","RIZANUL IKHWAN SIRAIT",null],
- UP:["MUHAMMAD ROSYID AN NAFI","GERALDI FIKRI PUTRA PRADITA",null,"RATIH KUSUMA DEWI",null],
- CA:[null,null,"LUKMAN HALIM","MUHAMMAD FANDHY HARTO",null],
- CG:["DINDA ATHARI HAENY","ELZA",null,null,null]};
- Object.entries(U).forEach(([u,a])=>{if(a[0])ADMN[u]=TEAM[u][0]=a[0];if(a[1])TEAM[u][1]=a[1];if(a[2])TEAM[u][2]=a[2];if(a[3])REVN[u]=a[3];if(a[4])UNITS[u].verifikator=a[4];});
- // PEOPLE cabang: [admin pengajuan, Manager of Finance / Adm & Finance, General Manager]
- Object.entries({CGK:["ANDY PURNOMO","RENY HERLAZA","DENNIS ANGGORO"],DPS:["I KETUT RIASA","ARFAN",null],SUB:["VENNI VANIAWATI","WHISNU HARDIYANTO","ERWAN BARLIANTHO"],
-  KNO:["ZAKI FARHAN","ANGGRAENY ERNARYANI","ANGGIE BUDI PRATAMA"],UPG:["SRI REJEKI WAHYUNINGSIH","RAMOT SIAHAAN","SUPRIADI"],BPN:["MARIYANA NAWAWI","WIDYANSAH","FAJAR NUGROHO ADI"],JOG:[null,"TYAS MUDIARINI","HARIRIK"]})
+/* Master data akun (file AKUN.xlsx dari user, 24 Nov 2026). Unit tanpa admin / tanpa GH → alur menyesuaikan:
+   - tanpa Admin (KC, UP): Reviewer Div.Head merangkap verifikator; review terpisah dilewati
+   - tanpa Approver GH (OIT): Division Head menjadi approver & rilis; review terpisah dilewati
+   - tanpa Admin & tanpa GH (OAO): Division Head memverifikasi sekaligus merilis */
+(()=>{const U={ // unit: [admin..], reviewer DH, approver GH (null = tidak ada GH → DH menjadi approver), kepada
+ OT:[["I WAYAN MURTANA","A A NGURAH RIDO WAHYUDI","IANDA FAHMI NURRIDHO"],"PALUPI MULYANTIANA","L. M. SYAMRIN"],
+ HT:[["SISWANTO FAJARUDIN"],"ZAIN HABIBIE","I MADE PUTRA ARSANA"],
+ HC:[["RAISSA NUR ARDHANI","NOVA RIZWAN JAYADILAGA","WULAN DHARI A"],"SENDIKA PANJI","LUH PUTU EKA ARYANI"],
+ US:[["CAHAYA HENDRIYATI","MUTIA AMDHANI","LILIK KURNIAWAN"],"YUSSY MAGDALENA","DEWI KUMALASARI"],
+ OIT:[["RUTH MARGARETH","RAKA FADIL DWI ANANDA","AMRI MUNI"],"SINGGIH PRIMA DHASA",null,"INFORMATION TECHNOLOGY DIVISION HEAD - KPS"],
+ OP:[["AAN KUNAEFI","HARRY YANTO","LINDA HARVIANI"],"RIZKI ILHAMI ASER","WASONO WALUYO"],
+ KR:[["M REVO NADRIAN","ASIH IRAWATI"],"SAHRUL MIFTAH","ANDIKA FAIZAL REZKY"],
+ KF:[["HILDA YULIANA","KIKI RIZKY AMELIA","ANDI SUPRATMAN"],"IRA MULIARA","IGN BAGUS SURYAWAN"],
+ UQ:[["INDRA RIKARVI IVAN","RAMADHA TRI HARRY MURTI","HARTOYO"],"ENDAH ANGGRAENI","NGAKAN MADE WIDIATMIKA"],
+ UL:[["MUHAMMAD FAIZAL FUAD","ANDI SASAWATY PATURUSI","INDRI PUSPITASARI"],"ANDREW OKTAVIANUS K","I GUSTI BAGUS PARTA"],
+ OS:[["TUTUN WILLY HILWAN","RAHMADI RAMLI"],"ANDI YUSRON","RIKKY FAUZI"],
+ OAO:[[],"ARISDIANTO SOULISA",null,"ANCILLARY OPERATION DIVISION HEAD - KPS"],
+ SBC:[["MANSYUR","ANDRI HARDIAN","OKTAVIANTO HARIBOWO"],"HASTO PRASETYO","SUGIANA"],
+ KC:[[],"NADIA YUANITA","IWAN SETIAWAN"],
+ HM:[["NADIA ASTI RAHMAWATI",TEAM.HM[1],"VINA HALIM"],"RIZANUL IKHWAN SIRAIT","EKO PURWANTO"],
+ UP:[[],"RATIH KUSUMA DEWI","BAYU INDRA WIBIKSANA"],
+ CA:[["DINDA ATHARI HAENY","ELZA"],"CANDY NOVRIANDA","SULHI HUSNI"],
+ CG:[["SHELI ANGRAINI PANGGABEAN","ROSALINDA DEBORA FUKUSHIMA PANTOW","YANUARDI NURACHMAN"],"IGM INDRAJAYA","COK N BAGUS PARSAMA"]};
+ Object.entries(U).forEach(([u,[ad,rv,ap,kp]])=>{REVN[u]=rv;UNITS[u].verifikator=ap||rv;if(kp)UNITS[u].kepada=kp;
+  TEAM[u]=ad.length?[...ad]:[ap?rv:rv];ADMN[u]=TEAM[u][0];});
+ // PEOPLE cabang: [admin pengajuan, MK (Manager of Finance / Adm & Finance), General Manager]
+ Object.entries({CGK:["BIYAN PRAPDITA","RENY HERLAZA","DENNIS ANGGORO"],DPS:["A.A. RATIH KHOMALYANA DEWI","ARFAN","I KETUT SUMARDHI"],SUB:["MULYADI","WHISNU HARDIYANTO","ERWAN BARLIANTHO"],
+  KNO:["YUNIDA SUSANDARI","ANGGRAENY ERNARYANI","JANCE NITA"],UPG:["WAHYU","RAMOT SIAHAAN","SUPRIADI"],BPN:["HERRY BUDIONO","MARIYANA NAWAWI","FAJAR NUGROHO"],JOG:["SUTARNO","TYAS MUDIARINI","HARIRIK"]})
   .forEach(([c,a])=>a.forEach((n,k)=>{if(n&&PEOPLE[c])PEOPLE[c][k]=n;}));})();
+/* peran gabungan per unit */
+const noRevU=u=>REVN[u]===UNITS[u].verifikator;                 // tidak ada GH: DH = approver, review terpisah dilewati
+const admIsU=u=>TEAM[u].length===1&&(TEAM[u][0]===REVN[u]||TEAM[u][0]===UNITS[u].verifikator); // tidak ada admin: verifikasi oleh DH
+const skipRevU=u=>noRevU(u)||admIsU(u);
 const RT={cab:"Cabang / unit pengaju","ppja-admin":"Admin PPJA (verifikator)","ppja-rev":"Reviewer Div.Head PPJA","ppja-appr":"Approver PPJA (Group Head)","cab-apr":"Approver nota dinas cabang","ppa-pusat":"Admin pusat (PPA)","ppa-rev":"Reviewer PPA / Tanpa PPA (penerima disposisi)",dir:"Direksi",sekdir:"Sekretaris Direksi",bud:"Unit Budgeting",pgd:"Unit Pengadaan",sa:"Superadmin"};
 const ACCS=[
  ...Object.keys(CAB).filter(c=>c!=="KPS").map((c,i)=>({id:"cab-"+c,type:"cab",cab:c,email:`admin.${c.toLowerCase()}@gapura.simulasi`,nama:PEOPLE[c][0],jab:"ADMIN PENGAJUAN CABANG - "+c,tel:`0812-10${pad(i+1,2)}-2026`,pass:PASS})),
- ...Object.keys(UNITS).flatMap((u,i)=>[{id:"adm-"+u,type:"ppja-admin",unit:u,email:`admin.${u.toLowerCase()}@gapura.simulasi`,nama:ADMN[u],jab:"ADMIN PPJA "+u,tel:`0813-20${pad(i+1,2)}-2026`,pass:PASS},
-  ...[1,2].map(k=>({id:`adm${k+1}-`+u,type:"ppja-admin",unit:u,email:`admin${k+1}.${u.toLowerCase()}@gapura.simulasi`,nama:TEAM[u][k],jab:"STAF / ADMIN PPJA "+u,tel:`0813-2${k+1}${pad(i+1,2)}-2026`,pass:PASS})),
-  {id:"rev-"+u,type:"ppja-rev",unit:u,email:`reviewer.${u.toLowerCase()}@gapura.simulasi`,nama:REVN[u],jab:"DIVISION HEAD PPJA "+u+" - KPS",tel:`0813-40${pad(i+1,2)}-2026`,pass:PASS},
-  {id:"apr-"+u,type:"ppja-appr",unit:u,email:`approver.${u.toLowerCase()}@gapura.simulasi`,nama:UNITS[u].verifikator,jab:UNITS[u].kepada,tel:`0813-30${pad(i+1,2)}-2026`,pass:PASS}]),
+ ...Object.keys(UNITS).flatMap((u,i)=>{const V=UNITS[u].verifikator,R=REVN[u],L=[];
+  TEAM[u].filter(n=>n!==R&&n!==V).forEach((n,k)=>L.push({id:(k?`adm${k+1}-`:"adm-")+u,type:"ppja-admin",unit:u,email:`admin${k?k+1:""}.${u.toLowerCase()}@gapura.simulasi`,nama:n,jab:(k?"STAF / ADMIN PPJA ":"ADMIN PPJA ")+u,tel:`0813-2${k}${pad(i+1,2)}-2026`,pass:PASS}));
+  if(!noRevU(u))L.push({id:"rev-"+u,type:"ppja-rev",unit:u,email:`reviewer.${u.toLowerCase()}@gapura.simulasi`,nama:R,jab:"DIVISION HEAD PPJA "+u+" - KPS"+(admIsU(u)?" (merangkap verifikator)":""),tel:`0813-40${pad(i+1,2)}-2026`,pass:PASS,roles:admIsU(u)?["ppja-rev","ppja-admin"]:undefined});
+  L.push({id:"apr-"+u,type:"ppja-appr",unit:u,email:`approver.${u.toLowerCase()}@gapura.simulasi`,nama:V,jab:UNITS[u].kepada+(noRevU(u)?" (tanpa GH — approver & rilis)":""),tel:`0813-30${pad(i+1,2)}-2026`,pass:PASS,roles:admIsU(u)&&noRevU(u)?["ppja-appr","ppja-admin"]:undefined});
+  return L;}),
  {id:"ppa-kps",type:"ppa-pusat",cab:"KPS",email:"admin.pusat@gapura.simulasi",nama:"RINI KUSUMAWATI",jab:"ADMIN ANGGARAN KANTOR PUSAT - KPS",tel:"0811-1006-2026",pass:PASS},
 {id:"bud",type:"bud",email:"budgeting@gapura.simulasi",nama:"ANDREAS WIJAYA",jab:"BUDGETING DIVISION HEAD - KPS",tel:"0811-1001-2026",pass:PASS},
 {id:"kc",type:"bud",email:"kc@gapura.simulasi",nama:"IWAN SETIAWAN",jab:"BUDGETING & FINANCE GROUP HEAD - KPS",tel:"0811-1015-2026",pass:PASS},
@@ -2252,9 +2270,9 @@ const ACCS=[
  {id:"dir-kom",type:"dir",email:"dc@gapura.simulasi",nama:"DENNY PERDANA WIRAWAN",jab:"DIREKTUR KOMERSIAL",tel:"0811-1014-2026",pass:PASS},
  {id:"sa",type:"sa",email:"superadmin@gapura.simulasi",nama:"SUPERADMIN G-ONE",jab:"ADMINISTRATOR SISTEM",tel:"0811-1005-2026",pass:PASS}];
 /* develop_8/12: approver nota dinas cabang — MK (Manager of Finance) / MI (Manager of Administration & Finance) → GM */
-const MKCAB=Object.keys(CAB),EGMN={CGK:"CECEP ABDUL SYUKUR",DPS:"I KETUT SUMARDHI",SUB:"CHENDRA YULIZA AS",KNO:"IRWANSYAH PUTRA",UPG:"DADDY SETIADY"};
+const MKCAB=Object.keys(CAB),EGMN={CGK:"CECEP ABDUL SYUKUR",DPS:"I KETUT SUMARDHI",SUB:"CHENDRA YULIZA AS",KNO:"IRWANSYAH PUTRA",UPG:"ANGGIE BUDI PRATAMA"};
 const CABOFF={};Object.keys(CAB).filter(c=>c!=="KPS").forEach((c,i)=>{const F1=["ANDI","RUDI","SITI","DEWI","HERU","LINA","AGUS","MAYA","YUSUF","RATNA","BAYU","FITRI","IRWAN","NOVI"],L1=["SUHENDRA","MARPAUNG","WIJAYA","KURNIA","SIREGAR","PRAMONO","SETIADI","HAKIM"];
- CABOFF[c]=[{id:"ndf-"+c,nama:PEOPLE[c][1],jab:"MANAGER OF FINANCE",em:"mk"},{id:"ndg-"+c,nama:PEOPLE[c][2],jab:"GENERAL MANAGER",em:"gm"}];if(EGMN[c])CABOFF[c].push({id:"nde-"+c,nama:EGMN[c],jab:"EXECUTIVE GENERAL MANAGER",em:"egm"});void F1;void L1;
+ CABOFF[c]=[{id:"ndf-"+c,nama:PEOPLE[c][1],jab:"MANAGER OF FINANCE",em:"mk"},{id:"ndg-"+c,nama:PEOPLE[c][2],jab:"GENERAL MANAGER",em:"gm"}];if(EGMN[c]===PEOPLE[c][2])CABOFF[c]=CABOFF[c].filter(o=>o.em!=="gm");if(EGMN[c])CABOFF[c].push({id:"nde-"+c,nama:EGMN[c],jab:"EXECUTIVE GENERAL MANAGER",em:"egm"});void F1;void L1;
  CABOFF[c].forEach((o,k)=>ACCS.push({id:o.id,type:"cab-apr",cab:c,email:`${o.em}.${c.toLowerCase()}@gapura.simulasi`,nama:o.nama,jab:o.jab+" - "+c,tel:`0812-5${k}${pad(i+1,2)}-2026`,pass:PASS}));});
 /* Tahap 2: reviewer PPA / Tanpa PPA (penerima disposisi approver) */
 Object.keys(CAB).filter(c=>c!=="KPS").forEach((c,i)=>{const F=["ARIF","BELLA","CANDRA","DINA","ERIK","FARAH","GILANG","HANA","IQBAL","JIHAN","KEVIN","LAILA","MUHAMMAD","NISA"],L=["PRATAMA","SAPUTRA","RAHAYU","WIBOWO","HIDAYAT","KUSNADI","SANTIKA"];
@@ -2263,8 +2281,10 @@ ACCS.push({id:"anl-1",type:"ppa-rev",cab:"KPS",email:"analyst1.budgeting@gapura.
  {id:"anl-2",type:"ppa-rev",cab:"KPS",email:"analyst2.budgeting@gapura.simulasi",nama:"GILANG RAMADHAN",jab:"ADMIN BUDGETING - KPS",tel:"0811-1008-2026",pass:PASS},
  {id:"akt-kps",type:"ppa-rev",cab:"KPS",email:"akuntansi.kps@gapura.simulasi",nama:"MAYA SARI",jab:"STAF AKUNTANSI - KPS",tel:"0811-1009-2026",pass:PASS});
 
-{const NF={"rva-CGK":"LISTYA DEWI KUSUMAWATI","rvb-CGK":"AHMAD KAMIL","rva-DPS":"A.A. RATIH KHOMALYANA DEWI","rvb-DPS":"LUH SRI KURNIA W","rva-UPG":"ROSDIANA",
- bud:"NADIA YUANITA",pgd:"GOGOD SRI WIDODO","anl-2":"SITI QIBLAYATI ISMAIL","akt-kps":"BAYU ERNANDA KUSUMA"};ACCS.forEach(a=>{if(NF[a.id])a.nama=NF[a.id];});}
+{const NF={dir:"IKHWAN F AGUS","dir-keu":"DAULAT MUSA","dir-ops":"CAPT RULI WIJAYA","dir-hc":"AA MADE HARDIKA","dir-kom":"DENNY PERDANA",
+ bud:"NADIA YUANITA",pgd:"GOGOD SRI WIDODO"};ACCS.forEach(a=>{if(NF[a.id])a.nama=NF[a.id];});
+ // akun yang ditandai HILANG di master data: staf anggaran & akuntansi cabang, analyst budgeting, akuntansi KPS
+ for(let k=ACCS.length-1;k>=0;k--)if(/^(rva|rvb)-|^anl-|^akt-kps$/.test(ACCS[k].id))ACCS.splice(k,1);}
 let ACC=null;
 const T=()=>ACC?ACC.type:"";
 const ALLV=["dir","sekdir","sa","bud","pgd","ppa-pusat"],SEEALL=["dir","sekdir","sa"];
@@ -2293,16 +2313,17 @@ const colState=c=>c.st==="done"?"✓ APPROVED":c.st==="sub"?"MENUNGGU APPROVER":
 const VIS=()=>DATA.filter(canSee);
 const isOwner=p=>!!ACC&&T()!=="ppja-appr"&&T()!=="ppja-rev"&&origP(p)===ME();
 const canSubmit=()=>["cab","ppja-admin","bud","pgd","sekdir"].includes(T());
-const hasDisp=p=>(p.disp||[]).some(d=>d.to.some(x=>(TEAM[p.unit]||[]).includes(x)));
+const selfU=u=>!!TEAM[u]&&TEAM[u].length===1&&TEAM[u][0]===UNITS[u].verifikator;
+const hasDisp=p=>selfU(p.unit)||(p.disp||[]).some(d=>d.to.some(x=>(TEAM[p.unit]||[]).includes(x)));
 /* alur disposisi: Approver (GH) → Reviewer Div.Head → Admin PPJA */
 const disR=p=>(p.disp||[]).some(d=>d.to.includes(REVN[p.unit]));
 /* disposisi per unit: PPJA utama memakai p.disp, PPJA terkait (UST/HM) memakai c.disp */
 const DL=(p,u)=>{if(u===p.unit)return p.disp||(p.disp=[]);const c=(p.collab||[]).find(x=>x.unit===u);return c?(c.disp||(c.disp=[])):[];};
-const hasDispU=(p,u)=>u===p.unit?hasDisp(p):DL(p,u).some(d=>d.to.some(x=>(TEAM[u]||[]).includes(x)));
+const hasDispU=(p,u)=>u===p.unit?hasDisp(p):selfU(u)||DL(p,u).some(d=>d.to.some(x=>(TEAM[u]||[]).includes(x)));
 const disRU=(p,u)=>DL(p,u).some(d=>d.to.includes(REVN[u]));
 const dUnit=p=>{const c=myCollab(p);return c?c.unit:p.unit;};
 /* hanya admin yang namanya ada di disposisi yang boleh mengerjakan (data lama / legacy: semua admin unit) */
-const dspAdm=(p,u)=>[...new Set(DL(p,u).flatMap(d=>d.to).filter(x=>(TEAM[u]||[]).includes(x)))];
+const dspAdm=(p,u)=>selfU(u)?[...TEAM[u]]:[...new Set(DL(p,u).flatMap(d=>d.to).filter(x=>(TEAM[u]||[]).includes(x)))];
 const myDsp=(p,u)=>!!ACC&&(u===p.unit&&!!p.legacy||dspAdm(p,u).includes(ACC.nama));
 const wDisp=p=>p.status==="MENUNGGU"&&!hasDisp(p)&&!p.legacy&&!p.tinjau&&!reqOpen(p);
 const canVerify=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="MENUNGGU"&&(hasDisp(p)||!!p.legacy)&&myDsp(p,p.unit);
@@ -2312,8 +2333,8 @@ const updUnseen=p=>!!ACC&&isOwner(p)&&(p.upd||0)>((p.updSeen||{})[ACC.id]||0);
 const canEditDraft=p=>T()==="ppja-admin"&&ACC.unit===p.unit&&p.status==="APPROVAL"&&myDsp(p,p.unit);
 const draftN=p=>(p.dchg||[]).filter(c=>c.t>=p.tAdm).length;
 const canRelease=p=>T()==="ppja-appr"&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!!p.rvOk;
-const canReview=p=>T()==="ppja-rev"&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!p.rvOk;
-const canDisp=p=>{if(!ACC||!["MENUNGGU","APPROVAL"].includes(p.status))return false;const c=myCollab(p),u=c?c.unit:p.unit;if(ACC.unit!==u||(c&&c.st==="done"))return false;return T()==="ppja-appr"||(T()==="ppja-rev"&&(disRU(p,u)||(!c&&p.status==="APPROVAL")));};
+const canReview=p=>T()==="ppja-rev"&&!skipRevU(p.unit)&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!p.rvOk;
+const canDisp=p=>{if(!ACC||!["MENUNGGU","APPROVAL"].includes(p.status))return false;const c=myCollab(p),u=c?c.unit:p.unit;if(ACC.unit!==u||(c&&c.st==="done"))return false;return (T()==="ppja-appr"&&!selfU(u))||(T()==="ppja-rev"&&!admIsU(u)&&(disRU(p,u)||(!c&&p.status==="APPROVAL")));};
 const canReject=p=>isPPJA()&&ACC.unit===p.unit&&["MENUNGGU","KEMBALI","APPROVAL"].includes(p.status);
 const accUnitTxt=a=>a.type==="cab"?`Cabang ${a.cab} — ${CAB[a.cab][0]}`:a.unit?`PPJA ${a.unit} — ${UNITS[a.unit].nama}`:"Kantor Pusat";
 
@@ -3675,12 +3696,13 @@ DATA.filter(p=>p.status==="APPROVAL"||p.status==="TERBIT").forEach(p=>{p.rvOk=tr
 {const p=DATA.find(x=>x.status==="APPROVAL"&&x.unit==="OT");if(p){p.rvOk=false;p.tRev=null;p.hist=p.hist.filter(e=>!/Review Div.Head/.test(e.what));p.hist.forEach(e=>{if(e.pos==="APR")e.pos="REV";});}}
 function eeSigRow(p){const U=UNITS[p.unit],rel=!dwm(p),chk=p.pic||p.chkBy||ADMN[p.unit];
  return `<tr><td>Date : ${tglN(p.tBuat)}<br>Prepared by : ${esc(p.prep)} ${paraf(p.prep)}<br>Checked by : ${p.pic&&verOn(p)?esc(p.pic)+" "+paraf(p.pic):"—"}<br>Approved by : ${esc(p.nama)} ${paraf(p.nama,p.status==="TERBIT")}</td>
- <td>Date : ${p.tTerbit?tglN(p.tTerbit):"—"}<br>Checked by : ${esc(chk)} (Admin PPJA) ${paraf(chk,p.status!=="MENUNGGU")}<br>Reviewed by : ${esc(REVN[p.unit])} (Div.Head) ${paraf(REVN[p.unit],!!p.rvOk)}<br>Approved by : ${esc(U.verifikator)} (Group Head · Approver PPJA ${p.unit}) ${paraf(U.verifikator,rel)}</td></tr>`;}
+ <td>Date : ${p.tTerbit?tglN(p.tTerbit):"—"}<br>Checked by : ${esc(chk)} (Admin PPJA) ${paraf(chk,p.status!=="MENUNGGU")}<br>${noRevU(p.unit)?"":`Reviewed by : ${esc(REVN[p.unit])} (Div.Head) ${paraf(REVN[p.unit],!!p.rvOk)}<br>`}Approved by : ${esc(U.verifikator)} (${noRevU(p.unit)?"Division Head":"Group Head"} · Approver PPJA ${p.unit}) ${paraf(U.verifikator,rel)}</td></tr>`;}
 
 /* ---- disposisi Approver / Reviewer ke tim PPJA ---- */
 const DARAH=["Untuk diverifikasi","Untuk ditindaklanjuti","Prioritas / segera","Untuk diketahui","Untuk dibuatkan kajian"];
 let DSP={pid:null,to:[],ar:[],note:""},DSQ=1;
-function dispTeam(p){const u=dUnit(p),c=myCollab(p),first=T()==="ppja-appr"&&!hasDispU(p,u)&&(c?c.st==="wait":p.status==="MENUNGGU");if(first)return [{n:REVN[u],r:"Reviewer Div.Head PPJA "+u+" — alur normal"},...TEAM[u].map((n,i)=>({n,r:(i?"Staf / Admin PPJA ":"Admin PPJA ")+u+" — langsung (mendesak)",urg:1}))];const L=TEAM[u].map((n,i)=>({n,r:i?"Staf / Admin PPJA "+u:"Admin PPJA "+u}));if(T()==="ppja-appr")L.push({n:REVN[u],r:"Reviewer Div.Head PPJA "+u});return L;}
+function dispTeam(p){const R0=dispTeam0(p),seen=new Set();return R0.filter(x=>x.n&&x.n!==ACC.nama&&!seen.has(x.n)&&seen.add(x.n)).map(x=>admIsU(dUnit(p))&&x.n===REVN[dUnit(p)]?{n:x.n,r:"Reviewer Div.Head PPJA "+dUnit(p)+" — merangkap verifikator (unit tanpa Admin)"}:x);}
+function dispTeam0(p){const u=dUnit(p),c=myCollab(p),first=T()==="ppja-appr"&&!hasDispU(p,u)&&(c?c.st==="wait":p.status==="MENUNGGU");if(first)return [{n:REVN[u],r:"Reviewer Div.Head PPJA "+u+" — alur normal"},...TEAM[u].map((n,i)=>({n,r:(i?"Staf / Admin PPJA ":"Admin PPJA ")+u+" — langsung (mendesak)",urg:1}))];const L=TEAM[u].map((n,i)=>({n,r:i?"Staf / Admin PPJA "+u:"Admin PPJA "+u}));if(T()==="ppja-appr")L.push({n:REVN[u],r:"Reviewer Div.Head PPJA "+u});return L;}
 function dispOpen(p){const T0=dispTeam(p);DSP={pid:p.id,to:T0.some(x=>x.urg)?[T0[0].n]:[],ar:["Untuk diverifikasi"],note:""};renderDsp();$("#dspM").classList.add("on");}
 function renderDsp(){const p=byId(DSP.pid),T2=dispTeam(p),U0=dUnit(p);
  $("#dspB").innerHTML=`<div class="dsh"><div><small>DISPOSISI · PPJA ${U0}${U0!==p.unit?" (tugas untuk EE PPJA "+p.unit+")":""}</small><b>${p.id} — ${esc(tCase(p.perihal))}</b><em>${esc(p.dari)} · ${esc(p.nd)}</em></div><button class="btn ghost sm" data-act="dspX">✕</button></div>
@@ -3983,9 +4005,9 @@ function rincBlockSdm(J){const man=F.rmode!=="xls";F.items.forEach(it=>{if(!it.K
   <div class="hint">Rincian SDM tidak ditulis di badan nota dinas — tampil sebagai lampiran draft usulan EE.</div>`;}
 /* ===== develop_8 poin 3 & 8: approval nota dinas berlapis di cabang, TTD barcode ===== */
 const ndUse=()=>!!F&&T()==="cab"&&!F.revOf&&F.nomMode!=="manual"&&F.cab!=="KPS";
-const ndSigner=(cab,jab)=>{const L=CABOFF[cab]||[];return L.find(o=>o.jab===jab)||{...(L.find(o=>o.em==="gm")||{}),jab};};
+const ndSigner=(cab,jab)=>{const L=CABOFF[cab]||[];return L.find(o=>o.jab===jab)||{...(L.find(o=>o.em==="gm")||L.find(o=>o.em==="egm")||{}),jab};};
 const ndAccN=id=>{for(const c in CABOFF){const o=CABOFF[c].find(x=>x.id===id);if(o)return o;}return null;};
-function ndLayers(){if(!F.ndL||F._ndJ!==F.jab){F.ndL=F.jab==="EXECUTIVE GENERAL MANAGER"?["ndf-"+F.cab,"ndg-"+F.cab]:["ndf-"+F.cab];F._ndJ=F.jab;}const sg=ndSigner(F.cab,F.jab);F.ndL=F.ndL.filter(id=>id!==sg.id);return F.ndL;}
+function ndLayers(){if(!F.ndL||F._ndJ!==F.jab){F.ndL=F.jab==="EXECUTIVE GENERAL MANAGER"?["ndf-"+F.cab,"ndg-"+F.cab]:["ndf-"+F.cab];F._ndJ=F.jab;}const sg=ndSigner(F.cab,F.jab);F.ndL=F.ndL.filter(id=>id!==sg.id&&ndAccN(id));return F.ndL;}
 function ndBuild(cab,jab,ids){const sg=ndSigner(cab,jab);
  return {L:[...ids.map(id=>{const o=ndAccN(id);return {acc:id,n:o.nama,jab:o.jab+" - "+cab,role:"paraf",ok:null,t:null,note:""};}),{acc:sg.id,n:sg.nama,jab:jab+" - "+cab,role:"ttd",ok:null,t:null,note:""}],k:0,done:false};}
 function ndBox(){const L=ndLayers(),sg=ndSigner(F.cab,F.jab),opts=(sel,ex)=>(CABOFF[F.cab]||[]).filter(o=>o.id!==sg.id&&(o.id===sel||!ex.includes(o.id))).map(o=>`<option value="${o.id}" ${sel===o.id?"selected":""}>${esc(o.nama)} — ${o.jab} - ${F.cab}</option>`).join("");
@@ -4141,7 +4163,7 @@ const ppaCanMakeFor=p=>p.status==="TERBIT"&&canMakePPA()&&(T()==="cab"?p.cab===A
 /* ---------- entitas (PPJA) & COA ---------- */
 const entOf=x=>x.cab==="KPS"?"KPS:"+x.unit:x.cab;
 const entN=e=>e.startsWith("KPS:")?UNITS[e.slice(4)].kepada:egmJab(e)+" - "+e;
-const entApr=e=>ACCS.find(a=>a.id===(e.startsWith("KPS:")?"apr-"+e.slice(4):"ndg-"+e));
+const entApr=e=>e.startsWith("KPS:")?ACCS.find(a=>a.id==="apr-"+e.slice(4)):(ACCS.find(a=>a.id==="ndg-"+e)||ACCS.find(a=>a.id==="nde-"+e));
 const entOpts=x=>x.cab==="KPS"?Object.keys(UNITS).map(u=>"KPS:"+u).filter(e=>e!==entOf(x)):Object.keys(CAB).filter(c=>c!=="KPS"&&c!==x.cab);
 const coaNm=c=>COAC[c]||(SISCOA[c]?SISCOA[c][0]:"(nama akun)");
 const coaKind=(c,x)=>{const g=coaG(c);return g==="capex"?"capex":g==="sdmo"||g==="sdmn"?"sdm":"ops";};
@@ -4193,12 +4215,12 @@ function lyrAcc(x,k){const A=id=>ACCS.find(a=>a.id===id);if(k==="MK"){const o=CA
  if(k==="DHB"){const b=A("bud");return {acc:"bud",n:b.nama,jab:b.jab};}
  if(k==="KC"){const b=A("kc");return {acc:"kc",n:b.nama,jab:b.jab};}
  if(k==="VER"){const p=srcOf(x.gid),u=p&&p.unit&&A("apr-"+p.unit)?p.unit:"KF",a=A("apr-"+u);return {acc:a.id,n:a.nama,jab:a.jab+" (UST / PPJA "+u+")"};}
- if(k==="AKT"){const a=A(x.cab==="KPS"?"akt-kps":"rvb-"+x.cab);return {acc:a.id,n:a.nama,jab:a.jab};}
+ if(k==="AKT"){const a=A(x.cab==="KPS"?"akt-kps":"rvb-"+x.cab)||A(x.cab==="KPS"?"kc":"ndf-"+x.cab);return {acc:a.id,n:a.nama,jab:a.jab};}
  const a=ACCS.find(z=>z.id===DIRA[k]);return {acc:a.id,n:a.nama,jab:a.jab};}
 const ppaKew=x=>{const L=ppaMat(x).L,l=L[L.length-1][0];return l==="MK"?"cabang":l==="KC"?"kc":l==="AKT"?"akt":"direksi";};
 /* di pusat: Division Head Budgeting (review, disposisi ke admin budgeting) sebelum Budgeting & Finance Group Head */
 function ppaRoute(x){const L=ppaMat(x).L,i=L.findIndex(l=>l[0]==="KC"),L2=i<0?L:[...L.slice(0,i),["DHB","Review Budgeting"],...L.slice(i)];return L2.map(([lk,role])=>({...lyrAcc(x,lk),lk,role,ok:false,t:null,dp:[]}));}
-const needDp=r=>r&&["MK","DHB"].includes(r.lk);
+const needDp=r=>r&&["MK","DHB"].includes(r.lk)&&REVC(r.acc).length>0;
 const sigL=r=>!["DHB"].includes(r.lk);
 const REVC=acc=>(/^ndf-/.test(acc)?["rva-","rvb-"].map(p=>p+acc.slice(4)):acc==="bud"||acc==="kc"?["anl-1","anl-2"]:acc==="akt-kps"||/^rvb-/.test(acc)||/^apr-/.test(acc)?[]:/^dir/.test(acc)?["sekdir","anl-1"]:[]).map(i=>ACCS.find(a=>a.id===i)).filter(Boolean);
 const tipeFor=(j,g)=>PPAT[j].find(t=>tGrp(t)===g&&!/Spoke/.test(t))||PPAT[j].find(t=>tGrp(t)===g)||PPAT[j][0];
@@ -5537,11 +5559,11 @@ function doReturn(p){
 }
 function toAppr(p){
  if(!canVerify(p)||pendingChecks(p).length)return;
- endTinjau(p,true);const n=new Date();p.status="APPROVAL";p.tAdm=n;p.rvOk=false;p.tRev=null;if(p.req)p.req.done=n;p.chkBy=ACC.nama;
+ endTinjau(p,true);const n=new Date();p.status="APPROVAL";p.tAdm=n;p.rvOk=skipRevU(p.unit);p.tRev=p.rvOk?n:null;if(p.req)p.req.done=n;p.chkBy=ACC.nama;const SK=p.rvOk,AP=UNITS[p.unit].verifikator,SELF=AP===ACC.nama;
  if(!p.catatan.trim())p.catatan="DOKUMEN PENDUKUNG LENGKAP DAN SESUAI.";
- p.hist.push({t:n,who:`PPJA ${p.unit} — ${ACC.nama} (Admin)`,what:"Verifikasi admin selesai — diteruskan ke Reviewer Div.Head PPJA "+p.unit,note:`${p.items.length} item sesuai · ${isEE(p)?"EE":"nilai"} ${rp(eeTot(p))} · checked by ${ACC.nama}`,pos:"REV"});
- notifyEmail(p,"Menunggu review Div.Head",["ppja:"+p.unit],`Checklist diselesaikan ${ACC.nama}. Nilai ${isEE(p)?"EE":"disetujui"}: ${rp(eeTot(p))}.`,n,"rev-"+p.unit);
- toast(`${p.id} diteruskan ke Reviewer PPJA ${p.unit} (${REVN[p.unit]}).`);renderAll();
+ p.hist.push({t:n,who:`PPJA ${p.unit} — ${ACC.nama} (Admin)`,what:SK?(SELF?"Verifikasi selesai — siap dirilis (unit tanpa Admin & GH)":"Verifikasi selesai — diteruskan ke Approver PPJA "+p.unit+" ("+AP+")"+(noRevU(p.unit)?" · unit tanpa GH":" · Div.Head merangkap verifikator, review terpisah dilewati")):"Verifikasi admin selesai — diteruskan ke Reviewer Div.Head PPJA "+p.unit,note:`${p.items.length} item sesuai · ${isEE(p)?"EE":"nilai"} ${rp(eeTot(p))} · checked by ${ACC.nama}`,pos:SK?"APR":"REV"});
+ notifyEmail(p,SK?"Menunggu approval & rilis":"Menunggu review Div.Head",["ppja:"+p.unit],`Checklist diselesaikan ${ACC.nama}. Nilai ${isEE(p)?"EE":"disetujui"}: ${rp(eeTot(p))}.`,n,SK?"apr-"+p.unit:"rev-"+p.unit);
+ toast(SK?(SELF?`${p.id} siap dirilis — pindah ke peran Approver untuk rilis.`:`${p.id} diteruskan ke Approver PPJA ${p.unit} (${AP}).`):`${p.id} diteruskan ke Reviewer PPJA ${p.unit} (${REVN[p.unit]}).`);renderAll();
 }
 function backAdm(p,note){
  if(!canRelease(p)&&!canReview(p))return;const n=new Date(),rl=T()==="ppja-rev"?"Reviewer Div.Head":"Approver GH";p.status="MENUNGGU";p.tAdm=null;p.rvOk=false;p.catatan=note;
@@ -6880,6 +6902,13 @@ document.addEventListener("mousedown",e=>{const G=e.target.closest&&e.target.clo
  const c=e.target.closest("[data-tbx2]");if(c&&c.tagName!=="INPUT"&&!c.closest("label")){e.preventDefault();close();if(c.dataset.v)document.querySelectorAll(".tbxrg .shdd .swf").forEach(f=>f.setAttribute("fill",c.dataset.v));
   if(c.dataset.tbx2==="clr"){tTargets().forEach(x=>x.innerHTML="<br>");const ed=TBX.td&&TBX.td.closest(".rte");ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}else tbx2(c.dataset.tbx2,c.dataset.v);}},true);
 document.addEventListener("input",e=>{const b=e.target.closest&&e.target.closest(".tbxrg [data-tbx2=bg]");if(b){document.querySelectorAll(".tbxrg .shdd .swf").forEach(f=>f.setAttribute("fill",b.value));tbx2("bg",b.value);}});
+/* ===== Peran gabungan (unit tanpa Admin / tanpa GH): satu akun, pindah peran ===== */
+const RLBL={"ppja-admin":"Verifikator (Admin)","ppja-rev":"Reviewer Div.Head","ppja-appr":"Approver & rilis"};
+login=(o=>function(a){if(a&&a.roles)a.type=a.roles[0];return o.apply(this,arguments);})(login);
+function roleCnt(r){if(!ACC)return 0;const t0=ACC.type;ACC.type=r;let n=0;try{n=notifItems().P.filter(x=>x.p&&x.p.unit===ACC.unit).length;}catch(_){}ACC.type=t0;return n;}
+function roleStrip(){if(!ACC||!ACC.roles)return "";return `<div class="card rolesw"><span><b>Peran Anda</b> — unit ${ACC.unit} ${admIsU(ACC.unit)&&noRevU(ACC.unit)?"tanpa Admin & tanpa GH":admIsU(ACC.unit)?"tanpa Admin":"tanpa GH"}: verifikasi ${noRevU(ACC.unit)?"dan rilis ":""}dikerjakan sendiri.</span><div class="rsw">${ACC.roles.map(r=>{const n=r===ACC.type?0:roleCnt(r);return `<button class="${r===ACC.type?"on":""}" data-act="roleSw" data-r="${r}">${RLBL[r]}${n?` <i>${n}</i>`:""}</button>`;}).join("")}</div></div>`;}
+renderVerif=(o=>function(){const r=o.apply(this,arguments);const v=document.getElementById("vtop");if(v&&ACC&&ACC.roles&&!v.querySelector(".rolesw"))v.insertAdjacentHTML("afterbegin",roleStrip());return r;})(renderVerif);
+onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.roles&&ACC.roles.includes(r)&&ACC.type!==r){ACC.type=r;VF.sel=null;VF.box=null;goView("verif");toast("Peran aktif: "+RLBL[r]+".");}return true;}return o.apply(this,arguments);})(onAct8);
 
 </script>
 </body>
