@@ -1610,6 +1610,12 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 #docModal.fitm .page{width:794px!important;max-width:none!important;min-height:1123px!important;padding:64px 72px 70px!important;font-size:15px!important;margin:0 0 14px!important;transform-origin:0 0}
 #docModal.fitm .page.land{width:1123px!important;min-height:794px!important;padding:38px 42px 60px!important}
 .tile2[data-j=konsx]>b{padding-right:118px;white-space:normal}
+
+/* formulir evaluasi SDM (OP) */
+.page .fehd td{border:0!important;padding:2px 4px!important;background:none!important;vertical-align:top}
+.page .fehd tr{border:0!important}
+.page table th{letter-spacing:0}
+.page div>table th[style*="#4a4f57"]{text-transform:none;font-size:11.5px;line-height:1.25}
 </style>
 </head>
 <body>
@@ -6424,6 +6430,65 @@ function krFix(){if(!F||F.j!=="radio"||!F.sub)return;const ok=KRAK[F.sub].map(x=
 onAct8=(o=>function(act,a){const r=o.apply(this,arguments);if(act==="jnOk"&&F&&F.j==="radio"){krFix();renderAjukan();}return r;})(onAct8);
 fillContoh=(o=>function(){const r=o.apply(this,arguments);if(F&&F.j==="radio"&&F.sub){const ak=KRAK[F.sub][0][0],base=F.items[0]||{};
  F.items=KRSMP[F.sub].map(x=>({...JSON.parse(JSON.stringify(base)),...x,akun:ak}));if(F.sub==="bld")Object.assign(F.form,{objek:"GEDUNG KANTOR CABANG & GUDANG",nilai:"RP 42.000.000.000"});krFix();renderAjukan();}return r;})(fillContoh);
+
+/* ===== PPJA OP (UST): lampiran persetujuan "Formulir Evaluasi Kebutuhan SDM" — dirilis bersama nota dinas persetujuan jumlah SDM ===== */
+function terb(n){n=Math.floor(+n||0);const s=["","satu","dua","tiga","empat","lima","enam","tujuh","delapan","sembilan","sepuluh","sebelas"];
+ const f=x=>x<12?s[x]:x<20?f(x-10)+" belas":x<100?f(Math.floor(x/10))+" puluh"+(x%10?" "+f(x%10):""):x<200?"seratus"+(x%100?" "+f(x%100):""):x<1000?f(Math.floor(x/100))+" ratus"+(x%100?" "+f(x%100):""):x<2000?"seribu"+(x%1000?" "+f(x%1000):""):x<1e6?f(Math.floor(x/1000))+" ribu"+(x%1000?" "+f(x%1000):""):String(x);return n?f(n):"nol";}
+const isFE=c=>!!c&&c.unit==="OP"&&c.role==="jumlah";
+function feRows(p,c){const its=p.items.map((it,i)=>({it,i})).filter(x=>(c.fs||[]).includes(x.it.ust));
+ const R=its.length?its.map(x=>({key:"i"+x.i,nm:x.it.uraian||"FUNGSI "+(x.i+1),usul:x.it.qtyC!=null?+x.it.qtyC:(+x.it.qty||0),f:x.it.ust})):(c.fs||[]).map((f,k)=>({key:"f"+k,nm:f,usul:p.items.filter(it=>UP(it.uraian||"")===UP(f)).reduce((a,it)=>a+(+it.qty||0),0)||null,f}));
+ const cnt={};R.forEach(r=>cnt[r.f]=(cnt[r.f]||0)+1);const fe=p.fe||{};
+ R.forEach(r=>{r.ok=cnt[r.f]===1&&jmlF(p,r.f)?jmlF(p,r.f):null;r.ex=+((fe.ex||{})[r.key])||0;});return R;}
+function fePage(p,c){const t=c.t||c.tSub||new Date(),fe=p.fe||{},R=feRows(p,c),L=p.prodL||[],B=["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
+ const no=c.feNo||(c.feNo=`FE.${pad(100+(p.id.charCodeAt(12)*7)%880,4)}/OP/${pad(t.getMonth()+1,2)}/${t.getFullYear()}`),y=t.getFullYear(),m1=new Date(y,t.getMonth()-3,1),m3=new Date(y,t.getMonth()-1,1);
+ const okTot=(c.fs||[]).reduce((a,f)=>a+jmlF(p,f),0),usTot=R.reduce((a,r)=>a+(+r.usul||0),0),exTot=R.reduce((a,r)=>a+r.ex,0),t25=L.reduce((a,r)=>a+(+r.n25||0),0),t26=L.reduce((a,r)=>a+(+r.n||0),0);
+ const cell=v=>v==null||v===""?"—":fmt(v),cab=CAB[p.cab]?`${p.cab} — ${UP(CAB[p.cab][0])}`:p.cab,tt="border:1px solid #444;padding:4px 6px",th=tt+";background:#4a4f57;color:#fff;font-weight:700;text-align:center";
+ const prow=(L.length?L:[{k:"",n25:"",n:""},{k:"",n25:"",n:""},{k:"",n25:"",n:""}]).map(r=>`<tr><td style="${tt}">${esc(r.k||"")}</td><td style="${tt};text-align:center">${r.n25!==""&&r.n25!=null?fmt(+r.n25||0):""}</td><td style="${tt};text-align:center">${r.n!==""&&r.n!=null?fmt(+r.n||0):""}</td></tr>`).join("");
+ const ttd=(nm,jb,q)=>`<div style="text-align:center;width:32%"><div style="height:62px;display:flex;align-items:flex-end;justify-content:center">${q&&c.st==="done"?qrSvg(no+"|"+jb).replace("<svg",'<svg style="width:56px;height:56px"'):""}</div><div style="min-height:16px"><u>${esc(nm||"")}</u></div><b>${jb}</b></div>`;
+ return `<div class="page" style="font-family:Calibri,Arial,sans-serif;font-size:13.5px"><img class="ndlogo" src="${LOGO_GAPURA}" alt="Gapura">
+ <div style="text-align:center;font-weight:700;font-size:19px;margin-top:-6px">FORMULIR EVALUASI KEBUTUHAN SDM</div><div style="text-align:center;margin-bottom:6px">Nomor: ${esc(no)}</div><div style="border-top:1.5px solid #000;margin-bottom:12px"></div>
+ <table class="fehd" style="border-collapse:collapse;margin-left:10px"><tr><td style="width:22px">a.</td><td style="width:140px">Cabang</td><td>: ${esc(cab)}</td></tr><tr><td>b.</td><td>Ref No. Surat</td><td>: ${esc(p.nd||"-")}</td></tr><tr><td>c.</td><td>Tanggal</td><td>: ${tglL(t)}</td></tr>
+ <tr><td>d.</td><td>Perihal</td><td>: ${esc(p.perihal)}</td></tr><tr><td>e.</td><td>Permintaan</td><td>: Usulan penambahan SDM ${esc(R.map(r=>tCase(r.nm)).join(", "))} sebanyak ${fmt(usTot)} orang</td></tr><tr><td>f.</td><td>Evaluasi</td><td>:</td></tr></table>
+ <div style="margin:8px 0 0 30px">1) Evaluasi Produksi Cabang:<table style="border-collapse:collapse;width:96%;margin:6px 0 2px 14px;font-size:12.5px"><tr><th style="${th};width:55%">Kategori</th><th style="${th}">${y-1}</th><th style="${th}">${y}</th></tr>${prow}
+ <tr><th style="${th}">Rata-rata Produksi/bulan</th><th style="${th}">${t25?fmt(t25):""}</th><th style="${th}">${t26?fmt(t26):""}</th></tr></table>
+ <div style="font-size:11px;margin-left:14px">Catatan:<br>1. Produksi tahun ${y-1} merujuk pada data produksi cabang ${p.cab} tahun ${y-1}.<br>2. Produksi tahun ${y} berdasarkan rata-rata flight 3 bulan terakhir (${B[m1.getMonth()]} hingga ${B[m3.getMonth()]} ${m3.getFullYear()}).</div></div>
+ <div style="margin:12px 0 0 30px">2) Evaluasi Usulan SDM Cabang:<table style="border-collapse:collapse;width:96%;margin:6px 0 0 14px;font-size:12.5px"><tr><th rowspan="2" style="${th};width:34px">No</th><th rowspan="2" style="${th}">Rincian</th><th colspan="4" style="${th}">SDM</th></tr>
+ <tr><th style="${th}">Existing</th><th style="${th}">Usulan Penambahan Cabang</th><th style="${th}">Usulan Penambahan Disetujui</th><th style="${th}">Total SDM Setelah disetujui</th></tr>
+ ${R.map((r,i)=>`<tr><td style="${tt};text-align:center">${i+1}</td><td style="${tt}">${esc(tCase(r.nm))}</td><td style="${tt};text-align:center">${cell(r.ex)}</td><td style="${tt};text-align:center">${cell(r.usul)}</td><td style="${tt};text-align:center">${cell(r.ok)}</td><td style="${tt};text-align:center">${r.ok!=null?fmt(r.ex+r.ok):"—"}</td></tr>`).join("")}
+ ${R.length>1?`<tr><td colspan="2" style="${tt};text-align:right"><b>Total</b></td><td style="${tt};text-align:center"><b>${fmt(exTot)}</b></td><td style="${tt};text-align:center"><b>${fmt(usTot)}</b></td><td style="${tt};text-align:center"><b>${fmt(okTot)}</b></td><td style="${tt};text-align:center"><b>${fmt(exTot+okTot)}</b></td></tr>`:""}</table></div>
+ <div style="margin:14px 0 0 30px;text-align:justify;padding-right:20px">3) Berdasarkan evaluasi tersebut pada prinsipnya dari sisi operasional airside setuju dengan jumlah SDM Airside sebanyak <b>${fmt(okTot)} (${terb(okTot)})</b> orang untuk menangani rata-rata <b>${fe.fl?fmt(+fe.fl):"XX"}</b> flight per hari dengan clash handling rata-rata <b>${fe.cl?fmt(+fe.cl):"XX"}</b> flight.</div>
+ <div style="display:flex;justify-content:space-between;margin:26px 10px 0"><div style="width:32%">Dipersiapkan Oleh:</div><div style="width:64%;padding-left:12%">Diperiksa Oleh:</div></div>
+ <div style="display:flex;justify-content:space-between;margin:0 10px">${ttd(c.pic||ADMN.OP,"GH Domestic Airside<br>Operation Analyst",1)}${ttd(REVN.OP,"GH Domestic Airside<br>Operation Division Head",1)}${ttd(fe.intl||"","GH International Airside<br>Operation Division Head",fe.intl)}</div>
+ <div style="text-align:center;margin-top:22px">Disetujui oleh:</div><div style="display:flex;justify-content:center">${ttd(c.apr||UNITS.OP.verifikator,"Operation Group Head",1)}</div>
+ ${c.st==="done"?"":`<div style="text-align:center;color:#b45309;font-size:11px;margin-top:8px">(draf — menunggu approval Operation Group Head)</div>`}</div>`;}
+ustNdPage=(o=>function(p,c){let h=o(p,c);if(!isFE(c))return h;
+ h=h.replace("1 BERKAS (FORM ABK)","1 BERKAS (FORMULIR EVALUASI KEBUTUHAN SDM)").replace("berdasarkan Form ABK (analisis beban kerja) terlampir","berdasarkan Formulir Evaluasi Kebutuhan SDM terlampir");return h+fePage(p,c);})(ustNdPage);
+/* isian OP untuk formulir: SDM existing per fungsi, produksi tahun lalu, rata-rata flight & clash handling */
+prodBox=(o=>function(p,ed){const c=myCollab(p);return isFE(c)?"":o(p,ed);})(prodBox);
+function feEditor(p,c,ed){const fe=p.fe||(p.fe={ex:{}}),R=feRows(p,c),L=p.prodL||(p.prodL=[{k:"",n25:0,n:+p.prod||0}]),y=+((p.form||{}).tahun)||new Date().getFullYear();
+ return `<div class="card" style="margin-top:12px;border:1px dashed #c9d3e0"><b>Formulir Evaluasi Kebutuhan SDM</b> <span class="mut">— lampiran nota dinas persetujuan PPJA OP</span>
+ <div class="mut" style="margin-top:8px;font-weight:600">1) Evaluasi produksi cabang (rata-rata per bulan)</div>
+ <table class="tbl"><tr><th>Kategori</th><th class="num">${y-1}</th><th class="num">${y}</th>${ed?"<th></th>":""}</tr>${L.map((r,i)=>`<tr><td>${ed?`<input class="inp" data-fep="${i}:k" data-id="${p.id}" value="${esc(r.k||"")}" placeholder="mis. DOMESTIK / INTERNASIONAL / GARUDA">`:esc(r.k||"—")}</td>
+ <td class="num">${ed?`<input class="inp" type="number" min="0" style="width:110px" data-fep="${i}:n25" data-id="${p.id}" value="${r.n25||""}">`:fmt(+r.n25||0)}</td><td class="num">${ed?`<input class="inp" type="number" min="0" style="width:110px" data-fep="${i}:n" data-id="${p.id}" value="${r.n||""}">`:fmt(+r.n||0)}</td>${ed?`<td>${L.length>1?`<button class="btn ghost sm" data-act="fepDel" data-id="${p.id}" data-i="${i}">✕</button>`:""}</td>`:""}</tr>`).join("")}
+ <tr><td><b>Rata-rata produksi / bulan</b>${ed?` <button class="link" data-act="fepAdd" data-id="${p.id}">+ Tambah kategori</button>`:""}</td><td class="num"><b id="fepT25">${fmt(L.reduce((a,r)=>a+(+r.n25||0),0))}</b></td><td class="num"><b id="fepT26">${fmt(L.reduce((a,r)=>a+(+r.n||0),0))}</b></td>${ed?"<td></td>":""}</tr></table>
+ <div class="mut" style="margin-top:10px;font-weight:600">2) Evaluasi usulan SDM cabang</div>
+ <table class="tbl" style="margin-top:8px"><tr><th>Rincian</th><th class="num">SDM existing</th><th class="num">Usulan cabang</th><th class="num">Disetujui</th></tr>${R.map(r=>`<tr><td>${esc(tCase(r.nm))}</td><td class="num">${ed?`<input class="inp" type="number" min="0" style="width:100px" data-fe="ex:${r.key}" data-id="${p.id}" value="${r.ex||""}">`:fmt(r.ex)}</td><td class="num">${r.usul!=null?fmt(r.usul):"—"}</td><td class="num">${r.ok!=null?fmt(r.ok):"—"}</td></tr>`).join("")}</table>
+ <div class="g2" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px">
+ <label class="fld"><span>Rata-rata flight / hari</span>${ed?`<input class="inp" type="number" min="0" data-fe="fl" data-id="${p.id}" value="${fe.fl||""}">`:`<b>${fe.fl||"—"}</b>`}</label>
+ <label class="fld"><span>Clash handling rata-rata (flight)</span>${ed?`<input class="inp" type="number" min="0" data-fe="cl" data-id="${p.id}" value="${fe.cl||""}">`:`<b>${fe.cl||"—"}</b>`}</label>
+ <label class="fld"><span>GH International Airside Div. Head</span>${ed?`<input class="inp upc" data-fe="intl" data-id="${p.id}" value="${esc(fe.intl||"")}" placeholder="nama pemeriksa">`:`<b>${esc(fe.intl||"—")}</b>`}</label></div>
+ <div style="margin-top:8px"><button class="btn ghost sm" data-act="feDoc" data-id="${p.id}">📄 Pratinjau formulir evaluasi</button></div></div>`;}
+renderContrib=(o=>function(p){o(p);const c=myCollab(p);if(!isFE(c))return;const B=$("#vbody");if(!B)return;const card=B.querySelector(".card");const w=document.createElement("div");w.innerHTML=feEditor(p,c,canContrib(p,c));
+ const ref=B.querySelector(".dspw");if(ref)ref.before(w.firstElementChild);else if(card)card.appendChild(w.firstElementChild);})(renderContrib);
+onInp8=(o=>function(e,t,ds){if(ds&&ds.fe!==undefined){if(e.type!=="change")return true;const p=byId(ds.id),c=p&&myCollab(p);if(!p||!isFE(c)||!canContrib(p,c))return true;const fe=p.fe||(p.fe={ex:{}});
+ if(ds.fe.startsWith("ex:")){(fe.ex||(fe.ex={}))[ds.fe.slice(3)]=+t.value||0;}else fe[ds.fe]=ds.fe==="intl"?UP(t.value):(+t.value||0);sySoon&&sySoon();return true;}return o(e,t,ds);})(onInp8);
+function fepSync(p){const c=myCollab(p);p.prod=(p.prodL||[]).reduce((a,r)=>a+(+r.n||0),0);if(c&&c.prod&&typeof syncCol==="function")syncCol(p);}
+onInp8=(o=>function(e,t,ds){if(ds&&ds.fep!==undefined){if(e.type!=="change")return true;const p=byId(ds.id),c=p&&myCollab(p);if(!p||!isFE(c)||!canContrib(p,c))return true;const[i,k]=ds.fep.split(":");const r=p.prodL[+i];if(!r)return true;r[k]=k==="k"?UP(t.value):(+t.value||0);fepSync(p);const L=p.prodL,a5=document.getElementById("fepT25"),a6=document.getElementById("fepT26");if(a5)a5.textContent=fmt(L.reduce((x,q)=>x+(+q.n25||0),0));if(a6)a6.textContent=fmt(L.reduce((x,q)=>x+(+q.n||0),0));sySoon&&sySoon();return true;}return o(e,t,ds);})(onInp8);
+onAct8=(o=>function(act,a){if(act==="fepAdd"||act==="fepDel"){const p=byId(a.dataset.id),c=p&&myCollab(p);if(p&&isFE(c)&&canContrib(p,c)){if(act==="fepAdd")p.prodL.push({k:"",n25:0,n:0});else p.prodL.splice(+a.dataset.i,1);fepSync(p);renderVDetail();}return true;}
+ if(act==="feDoc"){const p=byId(a.dataset.id),c=p&&(myCollab(p)||(p.collab||[]).find(x=>x.unit==="OP"));if(p&&c)openDoc("Formulir Evaluasi Kebutuhan SDM — PPJA OP",p.id,fePage(p,c));return true;}return o.apply(this,arguments);})(onAct8);
+
+/* simpan jumlah SDM usulan cabang per fungsi sebelum EE kolaborasi menyetel qty baris EE menjadi 1 */
+syncCol=(o=>function(p){(p.items||[]).forEach(it=>{if(it.qtyC==null)it.qtyC=+it.qty||0;});return o(p);})(syncCol);
 
 </script>
 </body>
