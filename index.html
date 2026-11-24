@@ -2755,7 +2755,7 @@ function renderAjukan(){
  const qu=Object.keys(UNITS).find(u=>u.toLowerCase()===q);
  const tiles=Object.entries(JENIS).filter(([k,x])=>!q||k==="lain"||(qu?x.unit===qu:(x.nama+" "+x.ket+" "+(x.unit||"")+" "+(x.unit?UNITS[x.unit].nama:"")).toLowerCase().includes(q)));
  let h=ajTabs()+(`<div class="stp first"><span class="n">1</span><div><b>Pilih jenis pengajuan</b></div></div>
- <input class="inp" id="jq" placeholder="Cari jenis pengajuan atau PPJA… (contoh: GSE, radio, seragam, HT, pagu)" value="${esc(F.q)}" style="width:100%;margin-bottom:10px">
+ <input class="inp" id="jq" placeholder="Cari jenis pengajuan atau PPJA… (contoh: GSE, asuransi, seragam, HT, pagu)" value="${esc(F.q)}" style="width:100%;margin-bottom:10px">
  ${tilesHtml(tiles,q)}`);
  if(!F.revOf){const dr=myOwned().filter(p=>p.status==="DRAF");if(dr.length)h=ajTabs()+draftBanner(dr)+h.slice(ajTabs().length);}
  const hT=h;h=F.revOf?revHead():"";
@@ -4982,7 +4982,7 @@ const subLbl=()=>{const S=F&&SUBJ[F.j];return S&&F.sub?(S[1].find(x=>x[0]===F.su
 nmChip=function(){const sl=subLbl();return `<div class="skpick" style="margin:2px 0 6px">${sl?`<span class="skl">Jenis</span><b>${esc(sl)}</b>`:""}<span class="skl">Nomor</span><b>${F.nomMode==="manual"?"Nomor dari E-letter":"Nomor otomatis G-ONE"}</b><button class="link" data-act="jnNmOpen">Ubah</button></div>`;};
 onAct8=(o=>function(act,a){
  if(act==="jnSub"){if(F.jnPop){F.jnPop.sub=a.dataset.v;renderAjukan();}return true;}
- if(act==="jnOk"&&F.jnPop){const P=F.jnPop;if(SUBJ[P.j]&&!P.sub)return true;const r=o(act,a);if(SUBJ[F.j]){F.sub=P.sub;const sl=subLbl(),b=String(F.perihal||"").replace(/\s+—\s+(TRAINING (NON )?MANDATORY|SDM (NON )?OPS|HARDWARE|SOFTWARE|CAPEX)$/,"");F.perihal=b?b+" — "+UP(sl):F.perihal;renderAjukan();}return r;}
+ if(act==="jnOk"&&F.jnPop){const P=F.jnPop;if(SUBJ[P.j]&&!P.sub)return true;const r=o(act,a);if(SUBJ[F.j]){F.sub=P.sub;const sl=subLbl(),b=String(F.perihal||"").replace(/\s+—\s+(TRAINING (NON )?MANDATORY|SDM (NON )?OPS|HARDWARE|SOFTWARE|CAPEX|ASURANSI GSE|BUILDING INSURANCE)$/,"");F.perihal=b?b+" — "+UP(sl):F.perihal;renderAjukan();}return r;}
  if(act==="jnNmOpen"&&F&&F.j!=="gse"){F.jnPop={j:F.j,nm:F.nomMode,sub:F.sub,edit:1};renderAjukan();return true;}
  return o(act,a);})(onAct8);
 fillContoh=(o=>function(){const sub=F&&F.sub;o();if(!F)return;if(sub&&SUBJ[F.j]&&!F.sub){F.sub=sub;F.perihal=String(F.perihal||"")+" — "+UP(subLbl());}
@@ -6410,6 +6410,20 @@ const ITAK={hw:[["6700204","Beban Sewa Hardware"]],sw:[["SW-OPEX","Beban Lisensi
 function itFixAkun(){if(!F||F.j!=="it"||!F.sub)return;const ok=ITAK[F.sub].map(x=>x[0]);F.items.forEach(it=>{if(!ok.includes(it.akun))it.akun=ok[0];});}
 onAct8=(o=>function(act,a){const r=o.apply(this,arguments);if(act==="jnOk"&&F&&F.j==="it"){itFixAkun();renderAjukan();}return r;})(onAct8);
 fillContoh=(o=>function(){const r=o.apply(this,arguments);if(F&&F.j==="it"){itFixAkun();if(F.sub==="sw")F.items.forEach(it=>{it.uraian="LISENSI SISTEM DEPARTURE CONTROL (1 TAHUN)";it.sat="LISENSI";it.qty=1;it.harga=120000000;});renderAjukan();}return r;})(fillContoh);
+
+/* ===== Kotak KR: Asuransi → pop-up Asuransi GSE / Building Insurance ===== */
+Object.assign(JENIS.radio,{nama:"Asuransi",ket:"Asuransi GSE dan building insurance",
+ fields:[F_("objek","Objek pertanggungan"),F_("nilai","Nilai pertanggungan"),F_("periode","Periode polis"),F_("asuradur","Perusahaan asuransi eksisting")],
+ ex:{objek:"GSE CABANG (TRACTOR, BELT LOADER, GPU)",nilai:"RP 18.500.000.000",periode:"1 JANUARI 2027 S.D. 31 DESEMBER 2027",asuradur:"PT ASURANSI (SIMULASI)"},menindak:""});
+SUBJ.radio=["Jenis asuransi",[["gse","Asuransi GSE"],["bld","Building Insurance"]]];
+const KRAK={gse:[["ASR-GSE","Beban Asuransi GSE (kode akun menyusul)"]],bld:[["ASR-BLD","Beban Asuransi Gedung / Building (kode akun menyusul)"]]};
+(()=>{const ALL=[...KRAK.gse,...KRAK.bld];Object.defineProperty(JENIS.radio,"akun",{configurable:true,get(){const s=F&&F.j==="radio"&&F.sub;return s&&KRAK[s]?KRAK[s]:ALL;}});})();
+const KRSMP={gse:[{uraian:"PREMI ASURANSI GSE — TRACTOR & BELT LOADER",qty:24,sat:"UNIT",harga:6500000,dasar:"POLIS EKSISTING BERAKHIR 31 DESEMBER 2026"},{uraian:"PREMI ASURANSI GSE — GPU & ACU",qty:8,sat:"UNIT",harga:9200000,dasar:"POLIS EKSISTING BERAKHIR 31 DESEMBER 2026"}],
+ bld:[{uraian:"PREMI BUILDING INSURANCE — KANTOR CABANG & GUDANG",qty:1,sat:"POLIS",harga:145000000,dasar:"PERPANJANGAN POLIS ASURANSI GEDUNG TAHUN 2027"}]};
+function krFix(){if(!F||F.j!=="radio"||!F.sub)return;const ok=KRAK[F.sub].map(x=>x[0]);F.items.forEach(it=>{if(!ok.includes(it.akun))it.akun=ok[0];});}
+onAct8=(o=>function(act,a){const r=o.apply(this,arguments);if(act==="jnOk"&&F&&F.j==="radio"){krFix();renderAjukan();}return r;})(onAct8);
+fillContoh=(o=>function(){const r=o.apply(this,arguments);if(F&&F.j==="radio"&&F.sub){const ak=KRAK[F.sub][0][0],base=F.items[0]||{};
+ F.items=KRSMP[F.sub].map(x=>({...JSON.parse(JSON.stringify(base)),...x,akun:ak}));if(F.sub==="bld")Object.assign(F.form,{objek:"GEDUNG KANTOR CABANG & GUDANG",nilai:"RP 42.000.000.000"});krFix();renderAjukan();}return r;})(fillContoh);
 
 </script>
 </body>
