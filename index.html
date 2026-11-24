@@ -1697,6 +1697,23 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tline{position:absolute;z-index:139;background:#3b82f6;opacity:.75;pointer-events:none;border-radius:2px}
 .thand{position:absolute;z-index:140;width:16px;height:16px;border:1px solid #94a3b8;background:#fff;border-radius:3px;display:none;align-items:center;justify-content:center;cursor:pointer}
 .thand:hover{border-color:#2563EB;background:#eff6ff}
+/* grup Tabel di ribbon */
+.rib .tbxrg .rrow{gap:2px}
+.rib .tbxrg .tbi2{display:inline-flex;align-items:center;justify-content:center;gap:1px;height:28px;min-width:28px;padding:0 4px;border:1px solid transparent;background:none;border-radius:6px;cursor:pointer}
+.rib .tbxrg .tbi2:hover{background:#e6eef8;border-color:#c9d8ec}
+.rib .tbxrg .tbi2.dd i{font-style:normal;font-size:8px;color:#64748b}
+.rib .tbxrg.off .tbi2{opacity:.4;pointer-events:none}
+.rib .tbxrg .tbdd{position:relative}
+.rib .tbxrg .tbmenu{display:none;position:absolute;top:100%;right:0;z-index:130;background:#fff;border:1px solid #cfd8e3;border-radius:8px;box-shadow:0 8px 24px rgba(15,40,80,.18);padding:4px;min-width:170px}
+.rib .tbxrg .tbdd.open .tbmenu{display:flex;flex-direction:column}
+.rib .tbxrg .tbmenu>button{border:0;background:none;text-align:left;padding:7px 12px;font-size:12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.rib .tbxrg .tbmenu>button:hover{background:#fdecea}
+.rib .tbxrg .shmenu{width:248px;padding:8px;min-width:0}
+.rib .tbxrg .shp .shc{width:20px;height:20px;padding:0;border:1px solid rgba(0,0,0,.18);border-radius:2px;cursor:pointer}
+.rib .tbxrg .shp .sht .shc{height:16px;border-top:0;border-bottom:0;border-radius:0}
+.rib .tbxrg .shp .shc:hover{outline:2px solid #f59e0b}
+.rib .tbxrg .shp .shx{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:6px;font-size:12px;border-radius:6px;cursor:pointer;color:#1f2937}
+.rib .tbxrg .shp .shx:hover{background:#eef2f7}.rib .tbxrg .shp .shm{position:relative}.rib .tbxrg .shp .shm input{position:absolute;opacity:0;width:0;height:0}
 </style>
 </head>
 <body>
@@ -6778,6 +6795,33 @@ TH2.plus.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation()
  else if(TH2.mode==="col"){const G=tGrid(tb);const row=G.find(rw=>rw&&rw[P.k]&&(rw[P.k].colSpan||1)===1)||G[0];TBX.td=row[P.k];if(TBX.td)tbxDo(P.w==="a"?"cL":"cR");}
  thHide();},true);
 TH2.hand.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation();const tb=TH2.tb;if(!tb)return;const c=[...tb.querySelectorAll("td,th")];if(!c.length)return;TSL.a=c[0];TSL.b=c[c.length-1];tMark();setTimeout(tbxShow,0);},true);
+
+/* ===== Alat Tabel jadi satu grup "Tabel" di ribbon yang sama (sejajar Clipboard · Basic Text · Paragraph · Insert) ===== */
+tbxBar=function(){if(TBX.el)return TBX.el;const d=document.createElement("div");d.className="rg tbxrg off";
+ const ib=(ico,a,t)=>`<button type="button" class="tbi2" ${a} title="${t}" aria-label="${t}">${tIco(ico).replace('width="22" height="22"','width="18" height="18"')}</button>`;
+ d.innerHTML=`<div class="rgb"><div class="rrow2">
+  <div class="rrow"><div class="tbdd"><button type="button" class="tbi2 dd" data-tbxm="del" title="Hapus baris / kolom / tabel">${tIco("del").replace('width="22" height="22"','width="18" height="18"')}<i>▾</i></button>
+    <div class="tbmenu"><button type="button" data-tbx="dR">Hapus baris</button><button type="button" data-tbx="dC">Hapus kolom</button><button type="button" data-tbx2="clr">Kosongkan isi sel</button><button type="button" data-tbx="dT">Hapus tabel</button></div></div>
+   ${ib("rA",'data-tbx="rA"',"Sisip baris di atas")}${ib("rB",'data-tbx="rB"',"Sisip baris di bawah")}${ib("merge",'data-tbx2="merge"',"Gabung sel terblok")}
+   <div class="tbdd shdd"><button type="button" class="tbi2 dd" data-tbxm="shade" title="Shading (warna sel)">${tIco("bg").replace('width="22" height="22"','width="18" height="18"')}<i>▾</i></button><div class="tbmenu shmenu">${shPalette()}</div></div></div>
+  <div class="rrow">${ib("cL",'data-tbx="cL"',"Sisip kolom di kiri")}${ib("cR",'data-tbx="cR"',"Sisip kolom di kanan")}${ib("split",'data-tbx2="split"',"Pisah sel")}${ib("mg",'data-tbx="mg"',"Gabung dengan sel kanan")}${ib("bg0",'data-tbx2="bg0"',"Tanpa warna")}</div>
+ </div></div><div class="rgl">Tabel</div>`;
+ const close=()=>d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));
+ d.addEventListener("mousedown",e=>{const m=e.target.closest("[data-tbxm]");if(m){e.preventDefault();const w=m.parentNode,o=w.classList.contains("open");close();if(!o)w.classList.add("open");return;}
+  const b=e.target.closest("[data-tbx]");if(b){e.preventDefault();close();tbxDo(b.dataset.tbx);return;}
+  const c=e.target.closest("[data-tbx2]");if(c&&c.tagName!=="INPUT"&&!c.closest("label")){e.preventDefault();close();if(c.dataset.v){const f=d.querySelector(".shdd .swf");if(f)f.setAttribute("fill",c.dataset.v);}
+   if(c.dataset.tbx2==="clr"){tTargets().forEach(x=>x.innerHTML="<br>");const ed=TBX.td&&TBX.td.closest(".rte");ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}else tbx2(c.dataset.tbx2,c.dataset.v);}});
+ d.addEventListener("input",e=>{const b=e.target.closest("[data-tbx2=bg]");if(b){const f=d.querySelector(".shdd .swf");if(f)f.setAttribute("fill",b.value);tbx2("bg",b.value);}});
+ document.addEventListener("mousedown",e=>{if(!e.target.closest||!e.target.closest(".tbxrg .tbdd"))close();});
+ TBX.el=d;return d;};
+function tbxPlace(ed){const b=tbxBar(),w=ed&&ed.closest(".ndrte,.mailp,#mailp,.mcomp,.comp"),rib=(w&&w.querySelector(".rib"))||(ed&&ed.previousElementSibling&&ed.previousElementSibling.classList&&ed.previousElementSibling.classList.contains("rib")?ed.previousElementSibling:null);
+ if(rib){if(b.parentNode!==rib)rib.appendChild(b);}else if(ed&&b.nextElementSibling!==ed)ed.before(b);b.style.display="";return b;}
+tbxShow=function(){const b=tbxBar(),L=tSelCells(),td=L.length>1?L[0]:tbxCell();
+ if(!td){TBX.td=null;b.classList.add("off");return;}TBX.td=td;const ed=td.closest(".rte");if(!ed)return;tbxPlace(ed);b.classList.remove("off");};
+/* pasang grup Tabel di ribbon begitu editor dibuka */
+document.addEventListener("focusin",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(ed)tbxPlace(ed);});
+renderContrib=(o=>function(p){o(p);const ed=document.getElementById("feEd");if(ed){const b=tbxPlace(ed);b.classList.add("off");}})(renderContrib);
+renderAjukan=(o=>function(){const r=o.apply(this,arguments);const ed=document.getElementById("ndEd");if(ed)setTimeout(()=>{tbxPlace(ed).classList.add("off");},0);return r;})(renderAjukan);
 
 </script>
 </body>

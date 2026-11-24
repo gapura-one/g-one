@@ -1,6 +1,6 @@
 /* G-ONE service worker — cache-first: aplikasi langsung terbuka dari memori HP,
    versi terbaru diunduh di latar belakang dan dipakai pada pembukaan berikutnya */
-const C="gone-shade2-2026-11-24";
+const C="gone-rib-2026-11-24";
 const FILES=["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});
