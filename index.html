@@ -5547,7 +5547,7 @@ const trashed=(p,me=ME())=>!!(TRASH[me]&&TRASH[me].has(p.id));
 const unreadAll=()=>ACC?threadsFor().filter(p=>!trashed(p)).reduce((a,p)=>a+unread(p),0):0;
 const SV=(d,w=18)=>`<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const SEND_I=SV('<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',17),ENV_C=SV('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'),ENV_O=SV('<path d="M3 10l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 10l9 6 9-6"/>'),TRASH_I=SV('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/>'),PRINT_I=SV('<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',16);
-const TOOLBAR=tb3();
+let TOOLBAR=tb3();
 let MAIL={mode:"inbox",id:null,f:"all",q:"",comp:null,pick:[],pq:"",pOpen:false},RNG=null;
 /* editor aktif: email koordinasi (#mEd) atau deskripsi nota dinas (#ndEd) — toolbar sama */
 let RTEID="mEd";const EDQ=()=>document.getElementById(RTEID)||document.getElementById("mEd")||document.getElementById("ndEd");
@@ -6634,7 +6634,7 @@ function tMark(){tClear();const A=TSL.a,B=TSL.b;if(!A||!B||A===B||A.closest("tab
  for(let r=r0;r<=r1;r++)for(let k=c0;k<=c1;k++){const c=G[r]&&G[r][k];if(c)c.classList.add("tsel");}
  const s=getSelection();try{const rg=document.createRange();const L=tSelCells();rg.setStart(L[0],0);rg.setEnd(L[L.length-1],L[L.length-1].childNodes.length);s.removeAllRanges();s.addRange(rg);}catch(_){}}
 document.addEventListener("mousedown",e=>{const td=e.target.closest&&e.target.closest(".rte[contenteditable=true] td,.rte[contenteditable=true] th");
- if(TSL.rs)return;if(!td){if(!(e.target.closest&&e.target.closest(".tbxbar,.ndrte .rg,.ndrte button,.ndrte select,.ndrte input")))tClear();return;}
+ if(TSL.rs)return;if(!td){if(!(e.target.closest&&e.target.closest(".tbxbar,.tbxrg,.rib,.ndrte .rg,.ndrte button,.ndrte select,.ndrte input")))tClear();return;}
  const r=td.getBoundingClientRect();if(e.clientX>r.right-5){e.preventDefault();const tb=td.closest("table"),G=tGrid(tb),pos=tPos(G,td);TSL.rs={tb,col:pos[1]+(td.colSpan||1)-1,x:e.clientX,w:r.width};return;}
  if(e.shiftKey&&TSL.a&&TSL.a.closest("table")===td.closest("table")){e.preventDefault();TSL.b=td;tMark();return;}
  tClear();TSL.a=td;TSL.b=td;TSL.drag=true;},true);
@@ -6828,6 +6828,32 @@ renderAjukan=(o=>function(){const r=o.apply(this,arguments);const ed=document.ge
 /* ikon Shading dibuat seperti Word: ember cat + garis warna aktif di bawahnya */
 tbxBar=(o=>function(){const had=!!TBX.el,d=o();if(had)return d;const b=d.querySelector('[data-tbxm="shade"]');
  if(b)b.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8A2 2 0 0 1 5 11z" fill="none" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 3l3 2" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/><path d="M18.5 13.5s2 2.3 2 3.5a2 2 0 0 1-4 0c0-1.2 2-3.5 2-3.5z" fill="#2563EB"/><rect class="swf" x="2" y="20.5" width="20" height="3" rx="1" fill="#FFC000"/></svg><i>▾</i>`,b.title="Warna sel tabel (Shading)";return d;})(tbxBar);
+
+/* ===== Grup "Tabel" menjadi bagian tetap ribbon di SEMUA editor narasi (nota dinas, email koordinasi, formulir OP) ===== */
+function tbxGroupHTML(){const sz=s=>s.replace('width="22" height="22"','width="18" height="18"'),ib=(ico,a,t)=>`<button type="button" class="tbi2" ${a} title="${t}" aria-label="${t}">${sz(tIco(ico))}</button>`;
+ const bucket=`<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8A2 2 0 0 1 5 11z" fill="none" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 3l3 2" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/><path d="M18.5 13.5s2 2.3 2 3.5a2 2 0 0 1-4 0c0-1.2 2-3.5 2-3.5z" fill="#2563EB"/><rect class="swf" x="2" y="20.5" width="20" height="3" rx="1" fill="#FFC000"/></svg>`;
+ return `<div class="rg tbxrg off"><div class="rgb"><div class="rrow2">
+  <div class="rrow"><div class="tbdd"><button type="button" class="tbi2 dd" data-tbxm="del" title="Hapus baris / kolom / tabel">${sz(tIco("del"))}<i>▾</i></button>
+    <div class="tbmenu"><button type="button" data-tbx="dR">Hapus baris</button><button type="button" data-tbx="dC">Hapus kolom</button><button type="button" data-tbx2="clr">Kosongkan isi sel</button><button type="button" data-tbx="dT">Hapus tabel</button></div></div>
+   ${ib("rA",'data-tbx="rA"',"Sisip baris di atas")}${ib("rB",'data-tbx="rB"',"Sisip baris di bawah")}${ib("merge",'data-tbx2="merge"',"Gabung sel terblok")}
+   <div class="tbdd shdd"><button type="button" class="tbi2 dd" data-tbxm="shade" title="Warna sel tabel (Shading)">${bucket}<i>▾</i></button><div class="tbmenu shmenu">${shPalette()}</div></div></div>
+  <div class="rrow">${ib("cL",'data-tbx="cL"',"Sisip kolom di kiri")}${ib("cR",'data-tbx="cR"',"Sisip kolom di kanan")}${ib("split",'data-tbx2="split"',"Pisah sel")}${ib("mg",'data-tbx="mg"',"Gabung dengan sel kanan")}${ib("bg0",'data-tbx2="bg0"',"Tanpa warna")}</div>
+ </div></div><div class="rgl">Tabel</div></div>`;}
+TOOLBAR=TOOLBAR.replace(/<\/div>\s*$/,tbxGroupHTML()+"</div>");
+/* elemen lama (bilah terpisah) tidak dipakai lagi */
+const TBXDUMMY=document.createElement("div");TBXDUMMY.style.display="none";
+tbxBar=function(){return TBXDUMMY;};tbxPlace=function(){return TBXDUMMY;};
+function tbxGrpOf(ed){if(!ed)return null;let w=ed.parentElement;while(w&&w!==document.body){const g=w.querySelector(":scope > .rib .tbxrg, :scope > .tb2 .tbxrg");if(g)return g;w=w.parentElement;}return null;}
+tbxShow=function(){const L=tSelCells(),td=L.length>1?L[0]:tbxCell();document.querySelectorAll(".tbxrg").forEach(g=>g.classList.add("off"));
+ if(!td){TBX.td=null;return;}TBX.td=td;const g=tbxGrpOf(td.closest(".rte"));if(g)g.classList.remove("off");};
+document.addEventListener("mousedown",e=>{const G=e.target.closest&&e.target.closest(".tbxrg");
+ if(!G){if(!(e.target.closest&&e.target.closest(".tbdd")))document.querySelectorAll(".tbxrg .tbdd.open").forEach(x=>x.classList.remove("open"));return;}
+ const close=()=>document.querySelectorAll(".tbxrg .tbdd.open").forEach(x=>x.classList.remove("open"));
+ const m=e.target.closest("[data-tbxm]");if(m){e.preventDefault();const w=m.parentNode,o=w.classList.contains("open");close();if(!o)w.classList.add("open");return;}
+ const b=e.target.closest("[data-tbx]");if(b){e.preventDefault();close();tbxDo(b.dataset.tbx);return;}
+ const c=e.target.closest("[data-tbx2]");if(c&&c.tagName!=="INPUT"&&!c.closest("label")){e.preventDefault();close();if(c.dataset.v)document.querySelectorAll(".tbxrg .shdd .swf").forEach(f=>f.setAttribute("fill",c.dataset.v));
+  if(c.dataset.tbx2==="clr"){tTargets().forEach(x=>x.innerHTML="<br>");const ed=TBX.td&&TBX.td.closest(".rte");ed&&ed.dispatchEvent(new Event("input",{bubbles:true}));}else tbx2(c.dataset.tbx2,c.dataset.v);}},true);
+document.addEventListener("input",e=>{const b=e.target.closest&&e.target.closest(".tbxrg [data-tbx2=bg]");if(b){document.querySelectorAll(".tbxrg .shdd .swf").forEach(f=>f.setAttribute("fill",b.value));tbx2("bg",b.value);}});
 
 </script>
 </body>
