@@ -1714,6 +1714,9 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .rib .tbxrg .shp .shc:hover{outline:2px solid #f59e0b}
 .rib .tbxrg .shp .shx{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:6px;font-size:12px;border-radius:6px;cursor:pointer;color:#1f2937}
 .rib .tbxrg .shp .shx:hover{background:#eef2f7}.rib .tbxrg .shp .shm{position:relative}.rib .tbxrg .shp .shm input{position:absolute;opacity:0;width:0;height:0}
+.rib .tbxrg .tbi2 .tlab{font-size:11px;color:#1e293b;margin-left:3px}
+.rib .tbxrg .tbi2 svg{flex:none}
+.rib .tbxrg .rrow{flex-wrap:nowrap}.rib .tbxrg .tbi2{flex:none}
 </style>
 </head>
 <body>
@@ -6822,6 +6825,9 @@ tbxShow=function(){const b=tbxBar(),L=tSelCells(),td=L.length>1?L[0]:tbxCell();
 document.addEventListener("focusin",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(ed)tbxPlace(ed);});
 renderContrib=(o=>function(p){o(p);const ed=document.getElementById("feEd");if(ed){const b=tbxPlace(ed);b.classList.add("off");}})(renderContrib);
 renderAjukan=(o=>function(){const r=o.apply(this,arguments);const ed=document.getElementById("ndEd");if(ed)setTimeout(()=>{tbxPlace(ed).classList.add("off");},0);return r;})(renderAjukan);
+/* ikon Shading dibuat seperti Word: ember cat + garis warna aktif di bawahnya */
+tbxBar=(o=>function(){const had=!!TBX.el,d=o();if(had)return d;const b=d.querySelector('[data-tbxm="shade"]');
+ if(b)b.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8A2 2 0 0 1 5 11z" fill="none" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 3l3 2" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/><path d="M18.5 13.5s2 2.3 2 3.5a2 2 0 0 1-4 0c0-1.2 2-3.5 2-3.5z" fill="#2563EB"/><rect class="swf" x="2" y="20.5" width="20" height="3" rx="1" fill="#FFC000"/></svg><i>▾</i>`,b.title="Warna sel tabel (Shading)";return d;})(tbxBar);
 
 </script>
 </body>
