@@ -1617,6 +1617,13 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .page table th{letter-spacing:0}
 .page div>table th[style*="#4a4f57"]{text-transform:none;font-size:11.5px;line-height:1.25}
 .page .feTb table{border-collapse:collapse;width:96%}.page .feTb table td,.page .feTb table th,#feEd table td,#feEd table th{border:1px solid #444!important;padding:4px 6px}
+/* alat tabel ala Word */
+.tbxbar{position:absolute;z-index:120;display:none;flex-wrap:wrap;gap:4px;align-items:center;padding:5px 6px;background:#fff;border:1px solid #cfd8e3;border-radius:10px;box-shadow:0 6px 20px rgba(15,40,80,.16);max-width:min(760px,calc(100vw - 16px))}
+.tbxbar .tbxl{font-size:11px;font-weight:700;color:#0b2a55;padding:0 6px}
+.tbxbar button{border:1px solid #e1e6ed;background:#f7f9fc;color:#1f2d3d;font-size:11.5px;border-radius:7px;padding:4px 8px;cursor:pointer;white-space:nowrap}
+.tbxbar button:hover{background:#e9f6ec;border-color:#9fd3ad}.tbxbar button[data-tbx^=d]:hover{background:#fdecea;border-color:#f3b1aa}
+.rte table td:focus-within,.rte table th:focus-within{outline:2px solid #3b82f6;outline-offset:-2px}
+.rte table td,.page .feTb table td{height:26px}
 </style>
 </head>
 <body>
@@ -6500,6 +6507,28 @@ onAct8=(o=>function(act,a){if(act==="fepAdd"||act==="fepDel"){const p=byId(a.dat
 
 /* simpan jumlah SDM usulan cabang per fungsi sebelum EE kolaborasi menyetel qty baris EE menjadi 1 */
 syncCol=(o=>function(p){(p.items||[]).forEach(it=>{if(it.qtyC==null)it.qtyC=+it.qty||0;});return o(p);})(syncCol);
+
+/* ===== Alat tabel ala Word di semua editor teks (nota dinas, email, formulir evaluasi OP) ===== */
+const TBX={el:null,td:null};
+function tbxCell(){const s=getSelection();if(!s||!s.rangeCount)return null;let n=s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;const td=n&&n.closest&&n.closest("td,th");return td&&td.closest(".rte[contenteditable=true]")?td:null;}
+function tbxBar(){if(TBX.el)return TBX.el;const d=document.createElement("div");d.className="tbxbar";
+ const B=[["rA","↑ Baris di atas"],["rB","↓ Baris di bawah"],["cL","← Kolom kiri"],["cR","→ Kolom kanan"],["dR","✕ Hapus baris"],["dC","✕ Hapus kolom"],["mg","⇔ Gabung sel kanan"],["dT","🗑 Hapus tabel"]];
+ d.innerHTML=`<span class="tbxl">Tabel</span>`+B.map(([k,l])=>`<button type="button" data-tbx="${k}">${l}</button>`).join("");
+ d.addEventListener("mousedown",e=>{e.preventDefault();const b=e.target.closest("[data-tbx]");if(b)tbxDo(b.dataset.tbx);});document.body.appendChild(d);TBX.el=d;return d;}
+function tbxShow(){const td=tbxCell(),b=tbxBar();if(!td){b.style.display="none";TBX.td=null;return;}TBX.td=td;const t=td.closest("table").getBoundingClientRect();b.style.display="flex";
+ const top=Math.max(8,t.top+scrollY-b.offsetHeight-6);b.style.top=top+"px";b.style.left=Math.max(8,Math.min(t.left+scrollX,document.documentElement.clientWidth-b.offsetWidth-8))+"px";}
+function tbxDo(k){const td=TBX.td;if(!td||!td.isConnected)return;const tr=td.parentNode,tb=td.closest("table"),ed=td.closest(".rte"),ci=td.cellIndex;
+ const blank=src=>{const c=src.cloneNode(false);c.removeAttribute("rowspan");c.innerHTML="<br>";return c;};
+ const newRow=()=>{const r=tr.cloneNode(false);[...tr.cells].forEach(c=>{const n=document.createElement("td");n.setAttribute("style",c.getAttribute("style")||"");n.style.background="";n.style.color="";n.style.fontWeight="";if(c.colSpan>1)n.colSpan=c.colSpan;n.innerHTML="<br>";r.appendChild(n);});return r;};
+ if(k==="rA")tr.before(newRow());else if(k==="rB")tr.after(newRow());
+ else if(k==="cL"||k==="cR")[...tb.rows].forEach(r=>{const c=r.cells[Math.min(ci,r.cells.length-1)];if(!c)return;const n=blank(c);n.colSpan=1;if(k==="cL")c.before(n);else c.after(n);});
+ else if(k==="dR"){if(tb.rows.length<=1)tb.remove();else tr.remove();}
+ else if(k==="dC"){[...tb.rows].forEach(r=>{const c=r.cells[Math.min(ci,r.cells.length-1)];if(!c)return;if(c.colSpan>1)c.colSpan--;else c.remove();});if(![...tb.rows].some(r=>r.cells.length))tb.remove();}
+ else if(k==="mg"){const n=td.nextElementSibling;if(n){td.colSpan=(td.colSpan||1)+(n.colSpan||1);if(n.textContent.trim())td.innerHTML+=" "+n.innerHTML;n.remove();}}
+ else if(k==="dT")tb.remove();
+ ed.dispatchEvent(new Event("input",{bubbles:true}));if(typeof rteSync==="function")try{rteSync();}catch(_){}TBX.td=null;setTimeout(tbxShow,0);}
+document.addEventListener("selectionchange",()=>{clearTimeout(TBX.tm);TBX.tm=setTimeout(tbxShow,60);});
+window.addEventListener("scroll",()=>{if(TBX.td)tbxShow();},true);
 
 </script>
 </body>
