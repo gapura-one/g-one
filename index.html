@@ -6693,7 +6693,7 @@ tbxBar=function(){if(TBX.el)return TBX.el;const d=document.createElement("div");
   <div class="tbg"><div class="tbr">${big("merge",'data-tbx2="merge"',"Gabung<br>Sel")}${big("split",'data-tbx2="split"',"Pisah<br>Sel")}</div><div class="tbl2">Gabung</div></div>
   <div class="tbg"><div class="tbr"><label class="tbb" title="Warna latar sel"><span class="tbi">${tIco("bg")}</span><span class="tbt">Warna<br>Sel</span><input type="color" value="#DBEAFE" data-tbx2="bg"></label>
     ${big("bg0",'data-tbx2="bg0"',"Tanpa<br>Warna")}${big("mg",'data-tbx="mg"',"Gabung<br>ke Kanan")}</div><div class="tbl2">Sel</div></div>
-  <div class="tbg"><div class="tbr">${big("alL",'data-tbx2="al" data-v="left"',"Rata<br>Kiri")}${big("alC",'data-tbx2="al" data-v="center"',"Rata<br>Tengah")}${big("alR",'data-tbx2="al" data-v="right"',"Rata<br>Kanan")}</div><div class="tbl2">Perataan</div></div>
+
   <div class="tbhint">Seret mouse / Shift+klik untuk blok sel · seret garis kanan sel untuk mengubah lebar kolom</div>`;
  d.addEventListener("mousedown",e=>{const m=e.target.closest("[data-tbxm]");if(m){e.preventDefault();m.parentNode.classList.toggle("open");return;}
   const b=e.target.closest("[data-tbx]");if(b){e.preventDefault();d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));tbxDo(b.dataset.tbx);return;}
