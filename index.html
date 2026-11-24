@@ -6768,9 +6768,9 @@ document.addEventListener("mousemove",e=>{if(TSL.drag||TSL.rs)return;if(e.target
  if(!tb){thHide();TH2.hand.style.display="none";TH2.tb=null;return;}
  const R=tb.getBoundingClientRect();TH2.tb=tb;Object.assign(TH2.hand.style,{display:"flex",left:(R.left+scrollX-18)+"px",top:(R.top+scrollY-18)+"px"});
  const rows=[...tb.rows];
- if(e.clientX<R.left+4&&e.clientX>=R.left-28){let best=null;rows.forEach((r,i)=>{const b=r.getBoundingClientRect();[[b.top,i,"a"],[b.bottom,i,"b"]].forEach(([y,ii,w])=>{const d=Math.abs(e.clientY-y);if(d<8&&(!best||d<best.d))best={d,y,i:ii,w};});});
+ if(e.clientX<R.left+10&&e.clientX>=R.left-30){let best=null;rows.forEach((r,i)=>{const b=r.getBoundingClientRect();[[b.top,i,"a"],[b.bottom,i,"b"]].forEach(([y,ii,w])=>{const d=Math.abs(e.clientY-y);if(d<12&&(!best||d<best.d))best={d,y,i:ii,w};});});
   if(best){TH2.mode="row";TH2.pos=best;Object.assign(TH2.plus.style,{display:"flex",left:(R.left+scrollX-24)+"px",top:(best.y+scrollY-9)+"px"});Object.assign(TH2.line.style,{display:"block",left:(R.left+scrollX)+"px",top:(best.y+scrollY-1)+"px",width:R.width+"px",height:"3px"});return;}}
- if(e.clientY<R.top+4&&e.clientY>=R.top-28){const G=tGrid(tb),first=G[0]||[];let best=null;first.forEach((c,k)=>{if(!c)return;const b=c.getBoundingClientRect();[[b.left,k,"a"],[b.right,k,"b"]].forEach(([x,kk,w])=>{const d=Math.abs(e.clientX-x);if(d<8&&(!best||d<best.d))best={d,x,k:kk,w};});});
+ if(e.clientY<R.top+10&&e.clientY>=R.top-30){const G=tGrid(tb),first=G[0]||[];let best=null;first.forEach((c,k)=>{if(!c)return;const b=c.getBoundingClientRect();[[b.left,k,"a"],[b.right,k,"b"]].forEach(([x,kk,w])=>{const d=Math.abs(e.clientX-x);if(d<12&&(!best||d<best.d))best={d,x,k:kk,w};});});
   if(best){TH2.mode="col";TH2.pos=best;Object.assign(TH2.plus.style,{display:"flex",left:(best.x+scrollX-9)+"px",top:(R.top+scrollY-24)+"px"});Object.assign(TH2.line.style,{display:"block",left:(best.x+scrollX-1)+"px",top:(R.top+scrollY)+"px",width:"3px",height:R.height+"px"});return;}}
  thHide();});
 TH2.plus.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation();const tb=TH2.tb,P=TH2.pos;if(!tb||!P)return;
