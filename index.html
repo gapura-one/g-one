@@ -6702,6 +6702,29 @@ tbxBar=function(){if(TBX.el)return TBX.el;const d=document.createElement("div");
  document.addEventListener("mousedown",e=>{if(!e.target.closest||!e.target.closest(".tbdd"))d.querySelectorAll(".tbdd.open").forEach(x=>x.classList.remove("open"));});
  TBX.el=d;setTimeout(()=>{const f=d.querySelector(".swf");if(f)f.setAttribute("fill","#DBEAFE");},0);return d;};
 
+/* ===== Undo / Redo editor teks (nota dinas, email, formulir OP) — riwayat sendiri agar perubahan tabel juga bisa diurungkan ===== */
+const RH={m:{},busy:false,t:null};
+const rhKey=ed=>ed.id+"|"+(ed.dataset.id||"");
+function rhGet(ed){const k=rhKey(ed);return RH.m[k]||(RH.m[k]={u:[ed.innerHTML],r:[]});}
+function rhPush(ed){if(RH.busy||!ed)return;const h=rhGet(ed),v=ed.innerHTML;if(h.u[h.u.length-1]===v)return;h.u.push(v);if(h.u.length>100)h.u.shift();h.r=[];}
+function rhEd(){const s=getSelection();let n=s&&s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;const e=n&&n.closest&&n.closest(".rte[contenteditable=true]");return e||(typeof EDQ==="function"?EDQ():null);}
+function rhApply(ed,v){RH.busy=true;ed.innerHTML=v;try{ed.focus();const r=document.createRange();r.selectNodeContents(ed);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);}catch(_){}
+ ed.dispatchEvent(new Event("input",{bubbles:true}));if(typeof rteSync==="function")try{rteSync();}catch(_){}RH.busy=false;if(typeof tClear==="function")tClear();setTimeout(()=>{try{tbxShow();}catch(_){}},0);}
+function rhUndo(ed){if(!ed)return;clearTimeout(RH.t);rhPush(ed);const h=rhGet(ed);if(h.u.length<2){toast("Tidak ada yang bisa diurungkan.");return;}h.r.push(h.u.pop());rhApply(ed,h.u[h.u.length-1]);}
+function rhRedo(ed){if(!ed)return;const h=rhGet(ed);if(!h.r.length){toast("Tidak ada yang bisa diulangi.");return;}const v=h.r.pop();h.u.push(v);rhApply(ed,v);}
+/* catat keadaan awal saat editor pertama disentuh, lalu setiap perubahan (ketikan dikelompokkan per jeda) */
+document.addEventListener("focusin",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(ed)rhGet(ed);});
+document.addEventListener("mousedown",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(ed)rhGet(ed);},true);
+document.addEventListener("input",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(!ed||RH.busy)return;clearTimeout(RH.t);RH.t=setTimeout(()=>rhPush(ed),450);},true);
+/* tombol Undo/Redo di toolbar + Ctrl+Z / Ctrl+Y */
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest('[data-cmd="undo"],[data-cmd="redo"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const ed=rhEd();if(b.dataset.cmd==="undo")rhUndo(ed);else rhRedo(ed);},true);
+document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest('[data-cmd="undo"],[data-cmd="redo"]'))e.preventDefault();},true);
+document.addEventListener("keydown",e=>{const ed=e.target.closest&&e.target.closest(".rte[contenteditable=true]");if(!ed||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();
+ if(k==="z"&&!e.shiftKey){e.preventDefault();rhUndo(ed);}else if(k==="y"||(k==="z"&&e.shiftKey)){e.preventDefault();rhRedo(ed);}},true);
+/* operasi tabel: simpan keadaan sebelum diubah agar bisa diurungkan */
+tbxDo=(o=>function(k){const ed=TBX.td&&TBX.td.closest(".rte");if(ed){clearTimeout(RH.t);rhPush(ed);}return o.apply(this,arguments);})(tbxDo);
+tbx2=(o=>function(k,v){const L=tTargets(),ed=L[0]&&L[0].closest(".rte");if(ed){clearTimeout(RH.t);rhPush(ed);}const r=o.apply(this,arguments);if(ed)setTimeout(()=>rhPush(ed),0);return r;})(tbx2);
+
 </script>
 </body>
 </html>
