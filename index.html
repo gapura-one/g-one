@@ -2552,7 +2552,7 @@ const canRelease=p=>T()==="ppja-appr"&&ACC.unit===p.unit&&p.status==="APPROVAL"&
 const canReview=p=>T()==="ppja-rev"&&!skipRevU(p.unit)&&ACC.unit===p.unit&&p.status==="APPROVAL"&&!p.rvOk;
 const canDisp=p=>{if(!ACC||!["MENUNGGU","APPROVAL"].includes(p.status))return false;const c=myCollab(p),u=c?c.unit:p.unit;if(ACC.unit!==u||(c&&c.st==="done"))return false;return (T()==="ppja-appr"&&!selfU(u))||(T()==="ppja-rev"&&!admIsU(u)&&(disRU(p,u)||(!c&&p.status==="APPROVAL")));};
 const canReject=p=>isPPJA()&&ACC.unit===p.unit&&["MENUNGGU","KEMBALI","APPROVAL"].includes(p.status);
-const accUnitTxt=a=>a.type==="cab"?`Cabang ${a.cab} — ${CAB[a.cab][0]}`:a.unit?`PPJA ${a.unit} — ${UNITS[a.unit].nama}`:"Kantor Pusat";
+const accUnitTxt=a=>a.type==="cab"?`Cabang ${a.cab}`:a.unit?`PPJA ${a.unit} — ${UNITS[a.unit].nama}`:"Kantor Pusat";
 
 /* ================= PIHAK EMAIL ================= */
 const DIRP=[...Object.keys(CAB).filter(c=>c!=="KPS").map(c=>"cab:"+c),...Object.keys(UNITS).map(u=>"ppja:"+u),"bud","pgd","sekdir","dir","sa"];
@@ -2600,7 +2600,7 @@ function mkMsg(o){return {id:MSGID++,fromP:o.fromP,who:o.who||plabel(o.fromP),to
 const reqOpen=p=>!!(p.req&&!p.req.done&&(p.status==="KEMBALI"||!p.req.ans));
 function notifyEmail(p,event,to,extra="",t=new Date(),toAcc=null){
  const m={id:NMID++,t,pid:p.id,event,to:[...new Set(to)],toAcc,extra,read:new Set(),
-  d:{id:p.id,nd:p.nd,desk:p.perihal,uraian:p.items.map(x=>x.uraian),nominal:total(p),asal:origP(p).startsWith("cab:")&&p.cab!=="KPS"?`Cabang ${p.cab} — ${CAB[p.cab][0]}`:plabel(origP(p)),unit:`PPJA ${p.unit} — ${UNITS[p.unit].nama}`,status:stLabel(p)}};
+  d:{id:p.id,nd:p.nd,desk:p.perihal,uraian:p.items.map(x=>x.uraian),nominal:total(p),asal:origP(p).startsWith("cab:")&&p.cab!=="KPS"?`Cabang ${p.cab}`:plabel(origP(p)),unit:`PPJA ${p.unit} — ${UNITS[p.unit].nama}`,status:stLabel(p)}};
  NMAIL.push(m);
  if(!SEEDING&&ACC){etoast(`📧 Notifikasi masuk ke email Outlook ${m.to.map(pmail).join(", ")} — ${p.id}`);}
  return m;}
@@ -3141,13 +3141,13 @@ function renderAjukan(){
     ${!F.revOf?(F.sdm?"":nmChip()):`<div class="radio"><label><input type="radio" name="nm" data-f="nomMode" value="auto" ${F.nomMode==="auto"?"checked":""}> Nomor otomatis dari G-ONE</label>
      <label><input type="radio" name="nm" data-f="nomMode" value="manual" ${F.nomMode==="manual"?"checked":""}> Nomor dari E-letter <small class="mut">(hanya untuk pengajuan yang sudah berjalan)</small></label></div>`}
     ${F.nomMode==="auto"?`<span class="nomor">${esc(no)}</span>`:`${inpU("ndManual",F.ndManual,"",`ND.0000/${kodeJab(F.jab)}/${ndTail(F.cab)}`)}`}</div>
-   <div class="fld"><label>Unit pengaju</label><input class="inp" value="${kp?"KANTOR PUSAT — "+esc(UP(plabel(ME()))):F.cab+" — "+UP(CAB[F.cab][0])}" readonly></div>
+   <div class="fld"><label>Unit pengaju</label><input class="inp" value="${kp?"KANTOR PUSAT — "+esc(UP(plabel(ME()))):"CABANG "+F.cab}" readonly></div>
    ${kp?`<div class="fld"><label>Anggaran</label><input class="inp" value="KANTOR PUSAT — ANGGARAN UNIT SENDIRI" readonly><div class="hint">Untuk memakai anggaran cabang / unit lain, ajukan dulu melalui menu <button class="link" data-act="paguNew">Permohonan Lintas Cabang / Unit</button>.</div></div>`:""}
    <div class="fld"><label>Jabatan pengirim <span class="req">*</span></label><select class="inp" data-f="jab">${JAB.map(j=>`<option ${F.jab===j[0]?"selected":""}>${j[0]}</option>`).join("")}</select></div>
    <div class="fld full"><div class="kt2 ${F.nomMode==="manual"?"one":""}"><div class="ktc"><div class="ktt"><span class="kti">✉</span><b>Kepada Yth.</b> <span class="req">*</span></div>${kepSel(J)}</div>
    ${F.nomMode==="manual"?"":`<div class="ktc"><div class="ktt"><span class="kti">⧉</span><b>Tembusan / CC</b> <span class="req">*</span></div>
     <div class="temw">${F.tem.map((t,i)=>`<div class="temr"><span class="tn">${i+1}.</span><select class="inp" data-tem="${i}" data-tk="jab"><option value="">— Jabatan —</option>${TJAB.map(j=>`<option ${t.jab===j?"selected":""}>${j}</option>`).join("")}</select>
-     <span class="dash">-</span><select class="inp" data-tem="${i}" data-tk="cab"><option value="">— Cabang —</option>${Object.keys(CAB).map(c=>`<option value="${c}" ${t.cab===c?"selected":""}>${c} — ${c==="KPS"?"KANTOR PUSAT":UP(CAB[c][0])}</option>`).join("")}</select>
+     <span class="dash">-</span><select class="inp" data-tem="${i}" data-tk="cab"><option value="">— Cabang —</option>${Object.keys(CAB).map(c=>`<option value="${c}" ${t.cab===c?"selected":""}>${c==="KPS"?"KPS — KANTOR PUSAT":c}</option>`).join("")}</select>
      <button class="btn red sm" data-act="delTem" data-i="${i}" title="Hapus" ${F.tem.length<2?"disabled":""}>✕</button></div>`).join("")}</div>
     <button class="btn ghost sm" data-act="addTem" style="margin-top:6px">+ Tambah Tembusan</button></div>
    `}</div></div>
@@ -3680,7 +3680,7 @@ function paguReplyPage(g){const r=g.reply;
  <div class="ndft">Balasan permohonan lintas cabang / unit ${g.id} · Data simulasi</div></div>`;}
 const pgPill=g=>`<span class="pill ${g.status==="DISETUJUI"?"p-done":g.status==="DITOLAK"?"p-x":"p-wait"}">${g.status==="MENUNGGU"?"MENUNGGU BALASAN":g.status}</span>`;
 function kepOpts(me,sel){const C=Object.keys(CAB).filter(c=>c!=="KPS"&&c!==me),U=Object.keys(UNITS).filter(u=>"P:"+u!==me);
- return `<option value="">— pilih cabang / PPJA —</option><optgroup label="Cabang">${C.map(c=>`<option value="${c}" ${sel===c?"selected":""}>GENERAL MANAGER - ${c} (${CAB[c][0]})</option>`).join("")}</optgroup>
+ return `<option value="">— pilih cabang / PPJA —</option><optgroup label="Cabang">${C.map(c=>`<option value="${c}" ${sel===c?"selected":""}>GENERAL MANAGER - ${c}</option>`).join("")}</optgroup>
  <optgroup label="PPJA / UST Kantor Pusat">${U.map(u=>`<option value="P:${u}" ${sel==="P:"+u?"selected":""}>${esc(UNITS[u].kepada)} — PPJA ${u}</option>`).join("")}</optgroup>`;}
 function renderPagu(){
  if(!ACC)return;const me=myParty(),L=PAGU.filter(pgVis).filter(g=>PG.tab==="all"||(PG.tab==="in"?g.to===me:g.from===me));
@@ -4526,7 +4526,7 @@ function masaTxt(a,b){if(!a||!b)return "-";const A=dP(a),E=dP(b);E.setDate(E.get
  return `${dS(a)} - ${dS(b)} (${[m?m+" bulan":"",dd?dd+" hari":""].filter(Boolean).join(" ")})`;}
 const nf=v=>v<0?"("+fmt(-v)+")":fmt(v);
 function sgSvg(n){const h=hsh(n);let d=`M8 ${28+h%8}`;for(let i=0;i<5;i++){const a=(h>>>(i*5))&31;d+=` q ${8+a%9} ${-16-(a%12)} ${16+a%7} ${(a%3?-1:1)*(3+a%8)}`;}d+=` M${14+h%18} 38 l ${70+h%30} ${-5-(h%7)}`;return `<svg viewBox="0 0 150 50" class="sgs"><path d="${d}" fill="none" stroke="#1E3A8A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
-const unitNm=x=>x.cab==="KPS"?UP(UNITS[x.unit]?UNITS[x.unit].nama:"KANTOR PUSAT"):"CABANG "+UP(CAB[x.cab][0]);
+const unitNm=x=>x.cab==="KPS"?UP(UNITS[x.unit]?UNITS[x.unit].nama:"KANTOR PUSAT"):"CABANG "+x.cab;
 /* ---------- dokumen: lembar 1 = format eksisting, lembar 2 = info tambahan G-ONE ---------- */
 function ppaDoc(x,live){const tp=x.kind==="TPPA",draft=live||x.status==="DRAF"||x.status==="DIKEMBALIKAN",route=draft?ppaRoute(x):x.route,S=ppaSum(x),C=xCoas(x),tot=ppaTot(x),tg=dP(x.tgl||new Date());
  const M=ppaMat(x),thn=tg.getFullYear(),tgs=dS(tg),unitL={hub:"Kantor Cabang",kps:"Kantor Pusat",spoke:"Kantor Hub"}[M.u],ttlR=tp?"TANPA PPA "+UP(FTN[xTag(x)])+(x.cab==="KPS"?" — KPS":" — CABANG"):M.t;
@@ -4607,7 +4607,7 @@ function lembar2(x,draft,route,tp,C,tg){
  <div class="ndft">${esc(x.no)} · terintegrasi dengan ${esc(x.gid)} · dibuat melalui G-ONE · data simulasi</div></div>`;
  return p2;}
 /* ---------- filter ala Excel ---------- */
-const brN=x=>x.cab==="KPS"?"KPS — Kantor Pusat":x.cab+" — "+CAB[x.cab][0];
+const brN=x=>x.cab==="KPS"?"KPS — Kantor Pusat":"Cabang "+x.cab;
 const KWS={cabang:"Cabang",kc:"Pusat",direksi:"Pusat (BOD)",akt:"Akuntansi"};
 const PFC={no:["Nomor",x=>ppaLock(x)?[x.no]:[x.no,x.gid]],desk:["Deskripsi",x=>[ppaLock(x)?"🔒 RAHASIA":(x.desk||"—")]],nil:["Nilai",x=>[ppaLock(x)?"🔒 RAHASIA":rp(ppaTot(x))]],kw:["Kewenangan",x=>[KWS[ppaKew(x)]]],jn:["Jenis PPA",x=>[jnN(x)]],pos:["Posisi approval line",x=>[pmPos(x)]],br:["Branch",x=>[brN(x)]],st:["Status",x=>[ppaPh(x)]],aw:["Awaiting approval",x=>{const c=ppaCur(x);return [c?c.n:"—"];}],coa:["COA",x=>xCoas(x)],
  rv:["Reviewer",x=>{const v=[...new Set((x.route||[]).flatMap(r=>lyrRev(r).map(z=>z.n)))];return v.length?v:["—"];}],
@@ -6016,7 +6016,7 @@ function etoast(msg){const t=$("#etoast");t.innerHTML=`<b>📧 Email notifikasi<
 function digestMail(ph,L){
  if(!L.length)return;const ev=ph==="pend"?"PENDING ITEM!":ph==="upd"?"UPDATE ITEM!":"FOLLOW UP!";let rep=1;
  for(let i=NMAIL.length-1;i>=0;i--){const m=NMAIL[i];if(m.digest&&m.toAcc===ACC.id&&m.event===ev){rep=Math.max(rep,(m.rep||1)+1);NMAIL.splice(i,1);}}
- NMAIL.push({id:NMID++,t:new Date(),pid:null,event:ev,rep,to:[ME()],toAcc:ACC.id,read:new Set(),digest:L.map(x=>({id:x.p.id,desk:x.p.perihal,todo:x.t,nominal:total(x.p),asal:origP(x.p).startsWith("cab:")?`Cabang ${x.p.cab} — ${CAB[x.p.cab][0]}`:plabel(origP(x.p)),sla:x.s}))});}
+ NMAIL.push({id:NMID++,t:new Date(),pid:null,event:ev,rep,to:[ME()],toAcc:ACC.id,read:new Set(),digest:L.map(x=>({id:x.p.id,desk:x.p.perihal,todo:x.t,nominal:total(x.p),asal:origP(x.p).startsWith("cab:")?`Cabang ${x.p.cab}`:plabel(origP(x.p)),sla:x.s}))});}
 /* ringtone urgent (Web Audio, tanpa berkas suara) */
 let AC=null;
 function audioUnlock(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();}catch(_){}}
