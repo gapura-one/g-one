@@ -1858,6 +1858,10 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tb2.rib .rg:first-child .rcol button span{display:none!important}
 .tb2.rib .rg:first-child .rcol:last-child button:first-child{grid-row:2;grid-column:2}.tb2.rib .rg:first-child .rcol:last-child button:last-child{grid-row:2;grid-column:3}
 .tb2.rib .tbxrg.off{opacity:.55}
+.vchips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.vic{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border-radius:999px;background:#F1F5F9;border:1px solid #E2E8F0;font-size:12.5px;cursor:default;font-family:inherit;padding:0}
+button.vic{cursor:pointer}.vic.warn{background:#FEE2E2;border-color:#FCA5A5;color:#B91C1C;font-weight:700}
+.vchips{justify-content:flex-start!important}.vchips>*{flex:none!important;margin:0!important}
 </style>
 </head>
 <body>
@@ -5483,7 +5487,7 @@ function renderVDetail(){
  let h=`<div class="card"><div class="vdh"><button class="btn green sm" data-act="vBack">← Back</button>
   <div class="itabs"><span class="mut">Item Pengajuan:</span>${p.items.map((x,k)=>{const w=pendingChecks(p,k).length;return `<button class="${k===i?"on":""}" data-act="vItem" data-i="${k}" title="${esc(x.uraian)}">Item ${k+1}${st==="MENUNGGU"?(w?` <i>${w}</i>`:" ✓"):""}</button>`;}).join("")}</div></div>
  <div class="r-id" style="margin-top:12px">${p.id}${p.rev?` <span class="tag t-a">REV ${p.rev}</span>`:""} <span>· ${esc(p.nd)}</span></div><h2>${esc(p.perihal)}</h2>
- <div class="r-meta" style="margin-bottom:8px">${esc(p.dari)} · ${J.nama} · ${p.items.length} item · ${rp(total(p))}</div>${stPill(p)} <span class="sla s-${sl.c}">⏱ ${sl.t}</span>${["MENUNGGU","APPROVAL"].includes(st)&&!can&&!rel&&!canReview(p)?' <span class="tag t-o">👁 MODE LIHAT</span>':""}${p.tinjau||infoLines(p).length?' <button class="tag t-w" data-act="pInfo" data-id="'+p.id+'" style="cursor:pointer">ℹ INFO BERKAS</button>':""}
+ <div class="vchips">${stPill(p)} <span class="sla s-${sl.c}" title="${esc(sl.t)}">⏱ ${slaShort(sl)}</span>${["MENUNGGU","APPROVAL"].includes(st)&&!can&&!rel&&!canReview(p)?' <span class="vic" title="Mode lihat — Anda tidak memproses berkas ini">👁</span>':""}${p.tinjau||infoLines(p).length?' <button class="vic warn" data-act="pInfo" data-id="'+p.id+'" title="Info berkas">ℹ</button>':""}</div>
  <div class="acts"><button class="btn ghost sm" data-act="doc" data-id="${p.id}" data-k="nd">📄 Nota dinas &amp; form</button><button class="btn ghost sm" data-act="docAll" data-id="${p.id}">⬇ Unduh semua dokumen (1 PDF)</button>
  <button class="btn sm" data-act="thread" data-id="${p.id}">✉ Koordinasi${u?` · ${u} baru`:""}</button>
  <button class="btn ghost sm" data-act="krono" data-id="${p.id}">🕑 Kronologis</button>
@@ -7257,6 +7261,7 @@ renderCek=(o=>function(){const r=o.apply(this,arguments);try{if(VIEW!=="ajukan"|
  const items=[...m.children].map(x=>`<div class="cks">${x.innerHTML}</div>`).join("");
  c.insertAdjacentHTML("afterend",`<div class="card ckside"><h3>Informasi PPJA</h3>${items}${dt?`<details class="ckd" style="margin-top:10px">${dt.innerHTML}</details>`:""}</div>`);m.remove();if(dt)dt.remove();}catch(_){}return r;})(renderCek);
 renderAjukan=(o=>function(){const r=o.apply(this,arguments);const fl=document.querySelector("#v-ajukan .flay");if(fl)fl.classList.toggle("cekm",AJM==="cek");return r;})(renderAjukan);
+function slaShort(sl){const t=String(sl&&sl.t||"");if(/lewat/i.test(t))return "Lewat batas";const m=t.match(/sisa\s+(\d+)\s+(hari kerja|hari|jam)/i);if(m)return "Sisa "+m[1]+" "+(m[2].toLowerCase()==="jam"?"jam":"hr");return t.replace(/^[^:]*:\s*/,"");}
 
 </script>
 </body>
