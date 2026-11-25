@@ -1727,6 +1727,15 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
  background:radial-gradient(circle,rgba(255,255,255,.55) 0%,rgba(200,225,255,.38) 30%,rgba(110,165,245,.16) 55%,rgba(110,165,245,0) 72%);filter:blur(1.5px)}
 .curglow.on{opacity:1}
 @media print{.curtrail,.curglow{display:none}}
+/* develop_15 */
+.cols{grid-template-columns:1fr!important}.cols>#detail{display:none!important}
+#ndPopW .dptop>.acts{margin:0 0 10px!important}#ndPopW .dptop>.alert{margin:0 0 10px}#ndPopW .dptop>.sla{margin:0 0 10px!important;display:inline-block}
+.updit .updh{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;cursor:pointer;text-align:left;font:inherit;padding:0}
+.updit .updh .chv{display:inline-block;transition:transform .15s;color:#64748B}.updit.cl .updh .chv{transform:rotate(-90deg)}
+.updit .updc{margin-left:auto;font-size:12px;color:#64748B;font-weight:500;white-space:nowrap}.updit .updc.bad{color:var(--red,#DC2626)}
+.updit.cl>.idocs{display:none}
+/* pop-up detail di atas halaman; modal/panel lain (kronologis, koordinasi, dokumen) tetap di atasnya */
+.mailp{z-index:315!important}.npanel{z-index:314!important}.push{z-index:313!important}.modal{z-index:320!important}.fmod{z-index:325!important}#docModal{z-index:330!important}.toast,.etoast{z-index:340!important}
 </style>
 </head>
 <body>
@@ -2819,7 +2828,7 @@ function renderDetail(){
   ["Approval & rilis "+(isEE(p)?"surat balasan + EE":"surat persetujuan"),p.tTerbit]];
  const c=st==="TERBIT"?4:st==="DRAF"||ndw?0:st==="APPROVAL"?3:2;
  let h=`<div class="mback"><button class="btn green sm" data-act="detClose">← Kembali</button><b>Detail Pengajuan</b></div><h3>Detail Pengajuan</h3><div class="hd"><b>${p.id}</b>${p.rev?` <span class="tag t-a" style="margin-left:6px">REV ${p.rev}</span>`:""}<span style="margin-left:auto">${stPill(p)}</span></div>
- <div class="sub">${esc(tCase(p.perihal))}</div><div class="meta">${esc(p.dari)} · ${esc(p.nd)} · ${tglS(p.tBuat)} · ${p.items.length} item</div>
+ <div class="sub">${esc(tCase(p.perihal))}</div>
  ${ndw?"":`<div class="sla s-${sl.c}" style="margin:-6px 0 10px">⏱ ${sl.t}</div>`}
  <div class="acts" style="margin:0 0 12px"><button class="btn sm" data-act="thread" data-id="${p.id}">✉ Koordinasi${visMsgs(p).length?` (${visMsgs(p).filter(delivered).length})`:""}${u?` · ${u} baru`:""}</button>
  <button class="btn ghost sm" data-act="krono" data-id="${p.id}">🕑 Kronologis</button>
@@ -3127,11 +3136,12 @@ function renderUpd(){
  h+=`<div class="updl">${L.map(p=>{const rq=p.status==="KEMBALI"||reqOpen(p);return `<button class="qi ${UPD.pid===p.id?"on":""}" data-act="updSel" data-id="${p.id}"><span>${p.id} · PPJA ${p.unit} · ${p.items.length} item</span><b>${esc(tCase(p.perihal))}</b><div>${stPill(p)} ${rq?'<span class="tag t-w">DIMINTA PPJA</span>':""}</div></button>`;}).join("")}</div>`;
  const p=byId(UPD.pid);
  if(p){const lastReq=[...visMsgs(p)].reverse().find(m=>m.fromP==="ppja:"+p.unit&&m.need);
-  h+=`<div class="box" style="margin-top:14px"><div class="k">${p.id} — ${esc(p.nd)}</div><div style="font-weight:600">${esc(p.perihal)}</div>
-  ${p.status==="KEMBALI"?`<div class="alert a-red" style="margin:10px 0 0"><span class="i">!</span><div><b>Catatan PPJA ${p.unit}</b><span>${esc(p.catatan)}</span></div></div>`:""}
-  ${lastReq?`<div class="alert a-amb" style="margin:10px 0 0"><span class="i">✉</span><div><b>Permintaan PPJA: ${esc(lastReq.subj)}</b><span>${esc(html2txt(lastReq.html).slice(0,260))}</span>${reqOpen(p)?`<span>⏱ ${leftTxt(p.req.due).t}</span>`:""}</div></div>`:""}</div>`;
-  p.items.forEach((it,i)=>{const S=UPD.st[i]||{docs:{},extra:[]};
-   h+=`<div class="item"><div class="item-h"><b>Item ${i+1} — ${esc(it.uraian)}</b></div><div class="idocs" style="margin-top:0">
+  const al=`${p.status==="KEMBALI"?`<div class="alert a-red" style="margin:10px 0 0"><span class="i">!</span><div><b>Catatan PPJA ${p.unit}</b><span>${esc(p.catatan)}</span></div></div>`:""}
+  ${lastReq?`<div class="alert a-amb" style="margin:10px 0 0"><span class="i">✉</span><div><b>Permintaan PPJA: ${esc(lastReq.subj)}</b><span>${esc(html2txt(lastReq.html).slice(0,260))}</span>${reqOpen(p)?`<span>⏱ ${leftTxt(p.req.due).t}</span>`:""}</div></div>`:""}`;if(al.trim())h+=`<div style="margin-top:14px">${al}</div>`;
+  UPD.col=UPD.col||{};
+  p.items.forEach((it,i)=>{const S=UPD.st[i]||{docs:{},extra:[]},ID=itemDocs(p,i),okN=ID.filter(d=>d.file&&p.v[`d_${i}_${d.k}`]!=="no").length,nwN=Object.keys(S.docs).length+S.extra.length,
+    prob=ID.some(d=>p.v[`d_${i}_${d.k}`]==="no"||(d.w&&!d.file)),cl=UPD.col[p.id+":"+i]??!(prob||nwN||i===0);
+   h+=`<div class="item updit ${cl?"cl":""}"><button class="item-h updh" data-act="updTog" data-i="${i}"><span class="chv">▾</span><b>Item ${i+1} — ${esc(it.uraian)}</b><span class="updc ${prob?"bad":""}">${okN}/${ID.length} dokumen${nwN?` · ${nwN} akan diperbarui`:""}${prob?" · perlu dilengkapi":""}</span></button><div class="idocs" style="margin-top:0">
    ${itemDocs(p,i).map(d=>{const v=p.v[`d_${i}_${d.k}`],nw=S.docs[d.k],bad=v==="no"||(d.w&&!d.file);
     return `<div class="upr"><span class="m ${nw?"ok":bad?"no":d.file?"ok":"na"}">${nw?"⇪":bad?"!":d.file?"✓":"○"}</span><div class="nm"><b>${d.n}</b> ${d.w?'<span class="req">*</span>':""}${v==="no"?' <span class="tag t-w">TIDAK SESUAI</span>':""}
      <div class="f">${nw?`<b style="color:var(--amber)">Akan diperbarui:</b> ${esc(nw)}`:d.file?esc(d.file)+" · "+docDates(it.docT[d.k],v):'<span style="color:var(--red)">Belum dilampirkan</span>'}</div></div>
@@ -6921,6 +6931,25 @@ onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.ro
   L.style.transform=`translate(${x}px,${y}px) rotate(${v>1?ang:0}deg) scale(${st},${Math.pow(st,-.3)})`;raf=v>.3?requestAnimationFrame(loop):0;};
  document.addEventListener("mousemove",e=>{tx=e.clientX+4;ty=e.clientY+6;if(!on){x=tx;y=ty;on=true;L.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
  document.documentElement.addEventListener("mouseleave",()=>{on=false;L.classList.remove("on");});})();
+/* ===== develop_15 #2: item di Update lampiran bisa dilipat ===== */
+onAct8=(o=>function(act,a){if(act==="updTog"){const k=UPD.pid+":"+a.dataset.i,it=a.closest(".updit");UPD.col=UPD.col||{};UPD.col[k]=!it.classList.contains("cl");it.classList.toggle("cl",UPD.col[k]);return true;}return o.apply(this,arguments);})(onAct8);
+/* ===== develop_15 #3: Monitor — klik baris membuka pop-up (nota dinas + droplist), tanpa panel samping ===== */
+function detPopRender(p){const D=$("#detail");let w=document.getElementById("ndPopW");
+ if(!NDPOP||!p||p.id!==NDPOP||!D){if(w&&!isApr())w.remove();return;}
+ if(!w){w=document.createElement("div");w.id="ndPopW";document.body.appendChild(w);}
+ const sc=w.querySelector(".npb")?w.querySelector(".npb").scrollTop:0,op=[...w.querySelectorAll("details[data-k]")].reduce((o,d)=>(o[d.dataset.k]=d.open,o),{});
+ const C=[...D.children],top=[],sec=[];
+ C.forEach((x,i)=>{if(x.matches(".mback,h3,.hd,.sub,.meta"))return;if(x.matches(".box")){const k=x.querySelector(":scope>.k, :scope>.bxh .k, .k");const t=k?k.innerHTML.replace(/<span class="bxc"><\/span>/g,""):"Detail";const c=x.cloneNode(true);const kk=c.querySelector(":scope>.k");if(kk)kk.remove();
+   sec.push({k:"s"+i+":"+(k?k.textContent.trim().slice(0,24):i),t,h:c.outerHTML.replace(/\bcoll\b/,"").replace(/\bshut\b/,"")});}else top.push(x.outerHTML);});
+ let nd="";try{nd=typeof ndPage==="function"&&!p.legacy?ndPage(p):"";}catch(_){nd="";}
+ w.innerHTML=`<div class="npo" data-act="ndPopX"></div><div class="npm" role="dialog" aria-label="Detail pengajuan">
+  <div class="nph"><div><small>${esc(p.id)}${p.nd?" · "+esc(p.nd):""}</small><b>${esc(tCase(p.perihal))}</b></div><span style="flex:1"></span>${stPill(p)}<button class="btn ghost sm" data-act="ndPopX">✕ Tutup</button></div>
+  <div class="npb"><div class="dptop">${top.join("")}</div>${nd?`<div class="npdoc">${nd}</div>`:""}
+   ${sec.map(s=>`<details class="npd" data-k="${esc(s.k)}" ${(op[s.k]??false)?"open":""}><summary>${s.t}</summary><div class="npdb">${s.h}</div></details>`).join("")}</div></div>`;
+ const b=w.querySelector(".npb");if(b)b.scrollTop=sc;}
+renderDetail=(o=>function(){o.apply(this,arguments);if(isApr())return;const p=SEL&&byId(SEL);if(!p||!canSee(p)){NDPOP=null;}detPopRender(p);})(renderDetail);
+openDetail=(o=>function(id){if(!isApr())NDPOP=id;const r=o.apply(this,arguments);if(!isApr()){document.querySelector(".app")&&document.querySelector(".app").classList.remove("det-on");if(VIEW==="monitor")renderDetail();}return r;})(openDetail);
+goView=(o=>function(v){if(v!=="monitor"&&NDPOP&&!isApr()){NDPOP=null;const w=document.getElementById("ndPopW");if(w)w.remove();}return o.apply(this,arguments);})(goView);
 
 </script>
 </body>
