@@ -1911,6 +1911,22 @@ body{background:#F7F8FA!important}
 @media(hover:hover){#rows tr:hover,.dtab tbody tr:hover{transform:translateY(-2px);box-shadow:0 6px 16px -6px rgba(15,23,42,.14),0 1px 0 rgba(15,23,42,.03);z-index:1}}
 #rows tr:active,.dtab tbody tr:active{transform:translateY(0) scale(.995);box-shadow:0 2px 6px -2px rgba(15,23,42,.12);transition-duration:.08s!important}
 @media(prefers-reduced-motion:reduce){#rows tr,.dtab tbody tr{transition:none!important}#rows tr:hover,.dtab tbody tr:hover{transform:none}}
+/* ===== cetak / unduh PDF: semua halaman tercetak utuh; nota dinas potret, EE/lampiran lebar lanskap ===== */
+@page{size:A4 portrait;margin:0}
+@page land{size:A4 landscape;margin:0}
+@media print{
+ html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+ body:has(#docModal.on)>*:not(#docModal){display:none!important}
+ body:has(#docModal.on) #docModal{position:static!important;inset:auto!important;display:block!important;width:auto!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;background:#fff!important;visibility:visible!important}
+ #docModal .dbar{display:none!important}
+ #docPages{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;transform:none!important;padding:0!important}
+ #docPages .page{transform:none!important;margin:0 auto!important;box-shadow:none!important;break-after:page;page-break-after:always;break-inside:auto;overflow:hidden;zoom:1!important}
+ #docPages .page:last-child{break-after:auto;page-break-after:auto}
+ #docPages .page:not(.land){width:210mm!important;min-height:297mm!important;page:auto}
+ #docPages .page.land{width:297mm!important;min-height:210mm!important;page:land}
+ #docPages .page.land table{max-width:100%}
+ .curglow,#gload,.fab,.push,.npanel,.toast,.etoast{display:none!important}
+}
 </style>
 </head>
 <body>
