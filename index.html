@@ -1723,10 +1723,8 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .rsw button{border:0;background:#fff;padding:7px 12px;font:600 12.5px inherit;font-family:inherit;cursor:pointer;color:#2b4a6f;border-left:1px solid #d6e2f0}
 .rsw button:first-child{border-left:0}.rsw button.on{background:#1f4e8c;color:#fff}
 .rsw button i{font-style:normal;background:#e11d48;color:#fff;border-radius:9px;padding:0 6px;margin-left:4px;font-size:11px}
-.curtrail{position:fixed;z-index:99999;pointer-events:none;margin:-1px 0 0 -1px;animation:curFade .65s ease-out forwards;filter:drop-shadow(0 0 3px rgba(120,190,255,.8))}
-@keyframes curFade{0%{opacity:.55;transform:scale(1)}100%{opacity:0;transform:scale(.6) translate(4px,6px)}}
-.curglow{position:fixed;left:0;top:0;width:120px;height:120px;border-radius:50%;pointer-events:none;z-index:99998;opacity:0;transition:opacity .3s;
- background:radial-gradient(circle,rgba(70,150,255,.16) 0%,rgba(70,150,255,.07) 40%,transparent 70%)}
+.curglow{position:fixed;left:0;top:0;width:160px;height:160px;border-radius:50%;pointer-events:none;z-index:99998;opacity:0;transition:opacity .35s;
+ background:radial-gradient(circle,rgba(110,175,255,.22) 0%,rgba(110,175,255,.1) 35%,rgba(110,175,255,.03) 55%,transparent 70%);filter:blur(4px)}
 .curglow.on{opacity:1}
 @media print{.curtrail,.curglow{display:none}}
 </style>
@@ -6915,16 +6913,13 @@ function roleCnt(r){if(!ACC)return 0;const t0=ACC.type;ACC.type=r;let n=0;try{n=
 function roleStrip(){if(!ACC||!ACC.roles)return "";return `<div class="card rolesw"><span><b>Peran Anda</b> — unit ${ACC.unit} ${admIsU(ACC.unit)&&noRevU(ACC.unit)?"tanpa Admin & tanpa GH":admIsU(ACC.unit)?"tanpa Admin":"tanpa GH"}: verifikasi ${noRevU(ACC.unit)?"dan rilis ":""}dikerjakan sendiri.</span><div class="rsw">${ACC.roles.map(r=>{const n=r===ACC.type?0:roleCnt(r);return `<button class="${r===ACC.type?"on":""}" data-act="roleSw" data-r="${r}">${RLBL[r]}${n?` <i>${n}</i>`:""}</button>`;}).join("")}</div></div>`;}
 renderVerif=(o=>function(){const r=o.apply(this,arguments);const v=document.getElementById("vtop");if(v&&ACC&&ACC.roles&&!v.querySelector(".rolesw"))v.insertAdjacentHTML("afterbegin",roleStrip());return r;})(renderVerif);
 onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.roles&&ACC.roles.includes(r)&&ACC.type!==r){ACC.type=r;VF.sel=null;VF.box=null;goView("verif");toast("Peran aktif: "+RLBL[r]+".");}return true;}return o.apply(this,arguments);})(onAct8);
-/* ===== Efek kursor: jejak panah memudar + cahaya lembut (desktop saja) ===== */
+/* ===== Efek kursor: hanya cahaya lembut yang mengikuti kursor (desktop saja) ===== */
 (()=>{if(!matchMedia("(pointer:fine)").matches||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
- const AR='<svg viewBox="0 0 16 22" width="14" height="19"><path d="M1 1v17l4.6-4.3 3 6.8 2.7-1.2-3-6.7H15z" fill="#fff" stroke="#1f4e8c" stroke-width="1.3" stroke-linejoin="round"/></svg>';
  const glow=document.createElement("div");glow.className="curglow";document.body.appendChild(glow);
- let lx=-99,ly=-99,last=0,gx=-200,gy=-200,tx=-200,ty=-200,raf=0;
- const loop=()=>{gx+=(tx-gx)*.18;gy+=(ty-gy)*.18;glow.style.transform=`translate(${gx-60}px,${gy-60}px)`;raf=(Math.abs(tx-gx)+Math.abs(ty-gy)>.5)?requestAnimationFrame(loop):0;};
- document.addEventListener("mousemove",e=>{tx=e.clientX;ty=e.clientY;glow.classList.add("on");if(!raf)raf=requestAnimationFrame(loop);
-  const now=performance.now(),d=Math.hypot(e.clientX-lx,e.clientY-ly);if(d<14||now-last<28)return;last=now;lx=e.clientX;ly=e.clientY;
-  const g=document.createElement("div");g.className="curtrail";g.innerHTML=AR;g.style.left=e.clientX+"px";g.style.top=e.clientY+"px";document.body.appendChild(g);setTimeout(()=>g.remove(),650);},{passive:true});
- document.addEventListener("mouseleave",()=>glow.classList.remove("on"));})();
+ let gx=-300,gy=-300,tx=-300,ty=-300,raf=0;
+ const loop=()=>{gx+=(tx-gx)*.14;gy+=(ty-gy)*.14;glow.style.transform=`translate(${gx-80}px,${gy-80}px)`;raf=(Math.abs(tx-gx)+Math.abs(ty-gy)>.5)?requestAnimationFrame(loop):0;};
+ document.addEventListener("mousemove",e=>{tx=e.clientX;ty=e.clientY;if(!glow.classList.contains("on")){gx=tx;gy=ty;glow.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
+ document.documentElement.addEventListener("mouseleave",()=>glow.classList.remove("on"));})();
 
 </script>
 </body>
