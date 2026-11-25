@@ -5532,7 +5532,7 @@ function renderVerif(){
   <label>Search: <input class="inp" id="vq" type="search" value="${esc(VF.q)}" autocomplete="off"></label></div>
  <div class="tw"><table class="dtab"><thead><tr>${th("no","No.")}${th("from","From")}${th("subj","Subject")}${th("doc","Doc. Number")}${th("rec","Received Date")}<th>Status</th><th style="width:44px"></th></tr></thead>
  <tbody>${P.map((p,i)=>{const f=fl.has(p.id),u=unread(p),sl=slaInfo(p);return `<tr class="${f?"flag":""}" data-act="vOpen" data-id="${p.id}">
-  <td data-l="No.">${st+i+1}</td><td data-l="From"><b>${esc(p.dari)}</b><div class="mut">${p.owner?"Kantor Pusat":CAB[p.cab][0]}</div></td>
+  <td data-l="No.">${st+i+1}</td><td data-l="From"><b>${esc(p.dari)}</b></td>
   <td data-l="Subject"><span class="sj">${esc(tCase(p.perihal))}</span><div class="mut">${p.id}${p.rev?" · REV "+p.rev:""} · ${p.items.length} item · ${rpS(total(p))}${u?` · <b style="color:var(--red)">✉ ${u} baru</b>`:""}</div></td>
   <td data-l="Doc. Number" class="code">${esc(p.nd)}</td><td data-l="Received Date">${tglN(p.tKirim)}<div class="mut">${jam(p.tKirim)}</div></td><td data-l="Status">${(ps=>`<b style="color:${ps.col||"var(--navy-dk)"}">${ps.n}</b>${ps.tag?`<div style="margin-top:3px">${ps.tag}</div>`:""}`)(posisi(p))}</td>
   <td class="fcell">${!VM()&&canDisp(p)?`<button class="dspb" data-act="dispOpen" data-id="${p.id}" title="Beri disposisi / arahan ke tim">➤${DL(p,dUnit(p)).length?`<i>${DL(p,dUnit(p)).length}</i>`:""}</button>`:""}<button class="pen ${f?"on":""}" data-act="vFlag" data-id="${p.id}" title="${f?"Hapus tanda":"Tandai baris"}">✎</button></td></tr>`;}).join("")||`<tr><td colspan="7" class="empty">Tidak ada data pada filter ini.</td></tr>`}</tbody></table></div>
