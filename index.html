@@ -1867,6 +1867,11 @@ button.vic{cursor:pointer}.vic.warn{background:#FEE2E2;border-color:#FCA5A5;colo
 .vboxes.v2 .vbox.b-ind{--c:hsl(215 32% 46%)!important;--bg:hsl(215 50% 97.5%)!important;border-color:hsl(215 30% 91%)!important}
 .vboxes.v2 .vbox.b-red{--c:hsl(355 38% 55%)!important;--bg:hsl(355 60% 97.5%)!important;border-color:hsl(355 35% 91%)!important}
 .vboxes.v2 .vbox.b-grn{--c:hsl(145 28% 42%)!important;--bg:hsl(145 35% 96.5%)!important;border-color:hsl(145 22% 89%)!important}
+.vboxes .vbox{--c:hsl(32 40% 55%)!important;--bg:hsl(38 55% 98%)!important}
+.vboxes .vbox.b-ind{--c:hsl(215 30% 52%)!important;--bg:hsl(215 45% 98%)!important}
+.vboxes .vbox.b-red{--c:hsl(355 35% 60%)!important;--bg:hsl(355 55% 98%)!important}
+.vboxes .vbox.b-grn{--c:hsl(145 26% 46%)!important;--bg:hsl(145 30% 97.5%)!important}
+.vboxes .vbox b,.vboxes .vbox .vbt{font-weight:600!important}
 </style>
 </head>
 <body>
@@ -2843,6 +2848,8 @@ function showDoc(p,k){
  else if(k.startsWith("up:")){const[,i,kk]=k.split(":");const d=itemDocs(p,+i).find(x=>x.k===kk);openDoc(`Item ${+i+1} · ${d.n}`,d.file,filePage(d.file,`Dilampirkan ${p.dari} · ${p.id} · Item ${+i+1}`));}
  else if(k.startsWith("x:")){const[,i,id]=k.split(":");const x=p.items[+i].extra.find(e=>e.id===id);openDoc(`Item ${+i+1} · Lampiran tambahan`,x.name,filePage(x.name,`Diunggah ${tglS(x.t)} ${jam(x.t)} · ${fsz(x.size)}`));}
 }
+/* judul dokumen pendukung tambahan = nama file (tanpa ekstensi, garis bawah jadi spasi) */
+function docTitle(n){return String(n||"Dokumen pendukung").replace(/\.[a-z0-9]{2,5}$/i,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim()||"Dokumen pendukung";}
 
 /* ================= MONITOR ================= */
 const STAGES10=[
@@ -2946,9 +2953,9 @@ function chkRowsP(p,i){
  const it=p.items[i],lock=p.status==="TERBIT",sa=T()==="sa";
  return itemDocs(p,i).map(d=>{const v=p.v[`d_${i}_${d.k}`],TT=it.docT[d.k]||{};return `<div class="chk">${d.file?'<span class="m ok">✓</span>':d.w?'<span class="m no">!</span>':'<span class="m na">○</span>'}
    <div class="tx">${d.n} ${d.w?'<span class="req">*</span>':""}${sa?(lock?` <span class="tag t-o" title="Dokumen sudah ditandatangani">🔒 TERKUNCI</span>`:` <button class="link" data-act="saSifat" data-id="${p.id}" data-k="${d.k}">ubah sifat</button>`):""}
-   <div class="f">${d.file?`<button class="link" data-act="doc" data-id="${p.id}" data-k="up:${i}:${d.k}">${esc(d.file)}</button>`:d.w?'<span style="color:var(--red)">Belum dilampirkan</span>':"Tidak dilampirkan"}${d.file?` · verifikasi: ${v==="ok"?'<b style="color:var(--green-dk)">sesuai</b>':v==="no"?'<b style="color:var(--red)">tidak sesuai</b>':"belum diperiksa"}`:""}</div>
+   <div class="f">${d.file?`<button class="link" data-act="doc" data-id="${p.id}" data-k="up:${i}:${d.k}">Lihat dokumen</button>`:d.w?'<span style="color:var(--red)">Belum dilampirkan</span>':"Tidak dilampirkan"}${d.file?` · verifikasi: ${v==="ok"?'<b style="color:var(--green-dk)">sesuai</b>':v==="no"?'<b style="color:var(--red)">tidak sesuai</b>':"belum diperiksa"}`:""}</div>
    ${d.file||TT.ver?`<div class="f">${docDates(TT,v)}</div>`:""}</div></div>`;}).join("")
- +(it.extra||[]).map(x=>{const v=p.v[`x_${i}_${x.id}`];return `<div class="chk"><span class="m ok">+</span><div class="tx">Lampiran tambahan<div class="f"><button class="link" data-act="doc" data-id="${p.id}" data-k="x:${i}:${x.id}">${esc(x.name)}</button> · ${fsz(x.size)} · diunggah ${dtx(x.t)}${v?` · verifikasi: ${v==="ok"?"sesuai":"tidak sesuai"}`:""}</div></div></div>`;}).join("");
+ +(it.extra||[]).map(x=>{const v=p.v[`x_${i}_${x.id}`];return `<div class="chk"><span class="m ok">+</span><div class="tx">${esc(docTitle(x.name))} <span class="tag t-o">TAMBAHAN</span><div class="f"><button class="link" data-act="doc" data-id="${p.id}" data-k="x:${i}:${x.id}">Lihat</button> · ${fsz(x.size)} · diunggah ${dtx(x.t)}${v?` · verifikasi: ${v==="ok"?"sesuai":"tidak sesuai"}`:""}</div></div></div>`;}).join("");
 }
 function renderDetail(){
  const p=SEL&&byId(SEL);
@@ -3002,10 +3009,10 @@ function docList(p){const row=(sym,cls,nm,tag,k,file,tt)=>`<div class="dl2"><spa
  let h=row("✓","ok","Nota dinas permohonan",["OTOMATIS","t-a"],"nd",p.nd)+row("✓","ok","Form pengajuan",["OTOMATIS","t-a"],"form","");
  if(p.status==="TERBIT"){h+=row("✓","ok",isEE(p)?"Surat balasan hasil verifikasi":"Surat persetujuan",null,"reply",p.outNo);if(isEE(p))h+=row("✓","ok","Engineering Estimate",null,"ee",p.eeNo);}
  p.items.forEach((it,i)=>{h+=`<div class="ihd">Item ${i+1} — ${esc(it.uraian)}</div>`;
-  itemDocs(p,i).forEach(d=>{const v=vs(p.v[`d_${i}_${d.k}`]);h+=d.file?row(v[0],v[1],esc(d.n),d.w?["WAJIB","t-w"]:null,`up:${i}:${d.k}`,d.file,v[2]):row(d.w?"!":"○",d.w?"no":"na",esc(d.n),d.w?["WAJIB","t-w"]:null,null,null,d.w?"Belum dilampirkan":"Tidak dilampirkan");});
-  (it.extra||[]).forEach(x=>{const v=vs(p.v[`x_${i}_${x.id}`]);h+=row(v[0],v[1],"Lampiran tambahan",null,`x:${i}:${x.id}`,x.name,v[2]);});
+  itemDocs(p,i).forEach(d=>{const v=vs(p.v[`d_${i}_${d.k}`]);h+=d.file?row(v[0],v[1],esc(d.n),d.w?["WAJIB","t-w"]:null,`up:${i}:${d.k}`,null,v[2]):row(d.w?"!":"○",d.w?"no":"na",esc(d.n),d.w?["WAJIB","t-w"]:null,null,null,d.w?"Belum dilampirkan":"Tidak dilampirkan");});
+  (it.extra||[]).forEach(x=>{const v=vs(p.v[`x_${i}_${x.id}`]);h+=row(v[0],v[1],esc(docTitle(x.name)),["TAMBAHAN","t-o"],`x:${i}:${x.id}`,null,v[2]);});
   (UNITS[p.unit].poin||[]).forEach((q,j)=>{const v=p.v[`p_${i}_${j}`];h+=`<div class="dl2 pn">${mark(v)}<div class="tx">${q}</div></div>`;});});
- const at=allDocs(p).filter(d=>d.k.startsWith("att:"));if(at.length){h+=`<div class="ihd">Lampiran email koordinasi</div>`+at.map(d=>row("📎","na","Lampiran email",null,d.k,d.s)).join("");}
+ const at=allDocs(p).filter(d=>d.k.startsWith("att:"));if(at.length){h+=`<div class="ihd">Lampiran email koordinasi</div>`+at.map(d=>row("📎","na",esc(d.s||"Lampiran email"),null,d.k,null)).join("");}
  h+=`<div class="ihd">Lainnya</div>`+row("🕑","na","Kronologis pengajuan",null,"krono","");
  return h;}
 function mark(v){return v==="ok"?'<span class="m ok">✓</span>':v==="no"?'<span class="m no">✗</span>':'<span class="m na">○</span>';}
@@ -3110,7 +3117,7 @@ function brSel(){
 }
 function itemDocRow(d,it,i){
  const car=!!(it.carry[d.k]&&it.docs[d.k]),ok=car&&it.docChk[d.k],has=it.docs[d.k];
- const st=has?(car?(ok?"✓ Dicek ulang — tetap dipakai: ":"Dari pengajuan sebelumnya — <b style='color:var(--amber)'>perlu dicek ulang</b>: ")+esc(has):"Terlampir: "+esc(has)):d.w?'<span style="color:var(--red)">Belum dilampirkan</span>':"Belum dilampirkan";
+ const st=has?(car?(ok?"✓ Dicek ulang — tetap dipakai":"Dari pengajuan sebelumnya — <b style='color:var(--amber)'>perlu dicek ulang</b>"):"Terlampir"):d.w?'<span style="color:var(--red)">Belum dilampirkan</span>':"Belum dilampirkan";
  const mk=car&&!ok?"amb":has?"ok":d.w?"no":"na";
  const btn=has?`${car&&!ok?`<button class="btn green sm" data-act="docKeep" data-i="${i}" data-k="${d.k}">✓ Masih sesuai</button>`:""}<label class="btn ghost sm">Ganti<input type="file" data-up="${i}:${d.k}"></label>${F.revOf?`<button class="btn ghost sm" data-act="sample" data-i="${i}" data-k="${d.k}">Contoh baru</button>`:`<button class="btn ghost sm" data-act="unsample" data-i="${i}" data-k="${d.k}">Hapus</button>`}`
   :`<label class="btn ghost sm">Pilih berkas<input type="file" data-up="${i}:${d.k}"></label><button class="btn ghost sm" data-act="sample" data-i="${i}" data-k="${d.k}">Pakai contoh</button>`;
@@ -3277,7 +3284,7 @@ function renderUpd(){
    h+=`<div class="item updit ${cl?"cl":""}"><button class="item-h updh" data-act="updTog" data-i="${i}"><span class="chv">▾</span><b>Item ${i+1} — ${esc(it.uraian)}</b><span class="updc ${prob?"bad":""}">${okN}/${ID.length} dokumen${nwN?` · ${nwN} akan diperbarui`:""}${prob?" · perlu dilengkapi":""}</span></button><div class="idocs" style="margin-top:0">
    ${itemDocs(p,i).map(d=>{const v=p.v[`d_${i}_${d.k}`],nw=S.docs[d.k],bad=v==="no"||(d.w&&!d.file);
     return `<div class="upr"><span class="m ${nw?"ok":bad?"no":d.file?"ok":"na"}">${nw?"⇪":bad?"!":d.file?"✓":"○"}</span><div class="nm"><b>${d.n}</b> ${d.w?'<span class="req">*</span>':""}${v==="no"?' <span class="tag t-w">TIDAK SESUAI</span>':""}
-     <div class="f">${nw?`<b style="color:var(--amber)">Akan diperbarui:</b> ${esc(nw)}`:d.file?esc(d.file)+" · "+docDates(it.docT[d.k],v):'<span style="color:var(--red)">Belum dilampirkan</span>'}</div></div>
+     <div class="f">${nw?`<b style="color:var(--amber)">Akan diperbarui</b>`:d.file?docDates(it.docT[d.k],v):'<span style="color:var(--red)">Belum dilampirkan</span>'}</div></div>
      <label class="btn ghost sm">${d.file?"Ganti":"Unggah"}<input type="file" data-uup="${i}:${d.k}"></label><button class="btn ghost sm" data-act="uSample" data-i="${i}" data-k="${d.k}">Pakai contoh</button>${nw?`<button class="btn red sm" data-act="uUndo" data-i="${i}" data-k="${d.k}">Batal</button>`:""}</div>`;}).join("")}
    ${attBlock([...(it.extra||[]).map(x=>({...x,locked:1})),...S.extra.map(x=>({...x,stg:1}))],!!UPD.open[i],i,`data-uxup="${i}"`,"uxRm","uxSample")}</div></div>`;});}
  $("#fLeft").innerHTML=h;
@@ -5524,9 +5531,9 @@ function renderVDetail(){
   ${p.tinjau&&on?tinjauItem(p,i):""}
   <div class="sec-t">A. Checklist dokumen Item ${i+1}</div>${itemDocs(p,i).map(d=>`<div class="vr">${mark(d.file?p.v[`d_${i}_${d.k}`]:(d.w?"no":null))}
    <div class="tx"><b style="font-weight:600">${d.n}</b> ${d.w?'<span class="req">*</span>':""}
-   ${(it.docBy||{})[d.k]?` <span class="tag t-a">DIUNGGAH ${esc(it.docBy[d.k])}</span>`:""}<div class="f">${d.file?esc(d.file)+` · <button class="link" data-act="doc" data-id="${p.id}" data-k="up:${i}:${d.k}">Lihat</button> · <button class="link" data-act="docDl" data-id="${p.id}" data-k="up:${i}:${d.k}">⬇ Unduh</button>`:d.w?'<span style="color:var(--red);font-weight:600">Tidak dilampirkan pengaju</span>':"Tidak dilampirkan"}</div>${d.file?`<div class="f">${docDates(it.docT[d.k],p.v[`d_${i}_${d.k}`])}</div>`:""}</div>
+   ${(it.docBy||{})[d.k]?` <span class="tag t-a">DIUNGGAH ${esc(it.docBy[d.k])}</span>`:""}<div class="f">${d.file?`<button class="link" data-act="doc" data-id="${p.id}" data-k="up:${i}:${d.k}">Lihat</button> · <button class="link" data-act="docDl" data-id="${p.id}" data-k="up:${i}:${d.k}">⬇ Unduh</button>`:d.w?'<span style="color:var(--red);font-weight:600">Tidak dilampirkan pengaju</span>':"Tidak dilampirkan"}</div>${d.file?`<div class="f">${docDates(it.docT[d.k],p.v[`d_${i}_${d.k}`])}</div>`:""}</div>
    ${d.file?tog(p,`d_${i}_${d.k}`,on):""}${on?`<span class="pupl"><label class="btn ghost sm">⇪ ${d.file?"Ganti":"Unggah"} (PPJA)<input type="file" data-pup="${i}:${d.k}" data-id="${p.id}"></label><button class="btn ghost sm" data-act="pSample" data-id="${p.id}" data-i="${i}" data-k="${d.k}">Contoh</button></span>`:""}</div>`).join("")}
-  ${(it.extra||[]).map(x=>`<div class="vr">${mark(p.v[`x_${i}_${x.id}`])}<div class="tx"><b style="font-weight:600">Lampiran tambahan</b> <span class="tag t-o">ADD ATTACHMENT</span><div class="f">${esc(x.name)} · ${fsz(x.size)} · <button class="link" data-act="doc" data-id="${p.id}" data-k="x:${i}:${x.id}">Lihat</button> · <button class="link" data-act="docDl" data-id="${p.id}" data-k="x:${i}:${x.id}">⬇ Unduh</button></div><div class="f">Diunggah ${dtx(x.t)}</div></div>${tog(p,`x_${i}_${x.id}`,on)}</div>`).join("")}
+  ${(it.extra||[]).map(x=>`<div class="vr">${mark(p.v[`x_${i}_${x.id}`])}<div class="tx"><b style="font-weight:600">${esc(docTitle(x.name))}</b> <span class="tag t-o">TAMBAHAN</span><div class="f">${fsz(x.size)} · <button class="link" data-act="doc" data-id="${p.id}" data-k="x:${i}:${x.id}">Lihat</button> · <button class="link" data-act="docDl" data-id="${p.id}" data-k="x:${i}:${x.id}">⬇ Unduh</button></div><div class="f">Diunggah ${dtx(x.t)}</div></div>${tog(p,`x_${i}_${x.id}`,on)}</div>`).join("")}
   ${on?`<div class="attw"><div class="atth"><label class="link addatt" style="cursor:pointer">+ Add Attachment (PPJA)<input type="file" accept=".xlsx,.docx,.pdf" data-pxup="${i}" data-id="${p.id}" style="display:none"></label><button class="link" data-act="pxSample" data-id="${p.id}" data-i="${i}">pakai contoh</button><span class="mut">Accepts .xlsx, .docx, .pdf files up to 4MB.</span></div></div>`:""}
   ${U.poin.length?`<div class="sec-t">B. Poin verifikasi PPJA ${p.unit} — Item ${i+1}</div>`:""}${U.poin.map((x,j)=>`<div class="vr">${mark(p.v[`p_${i}_${j}`])}<div class="tx">${x}</div>${tog(p,`p_${i}_${j}`,on)}</div>`).join("")}
   ${p.collab?colLead(p,on):""}${isSdmJ(p.j)&&!JENIS[p.j].lead?`<div class="sec-t">C1. ${esc(eeTitle(p))} — ${p.items.length} fungsi</div><div class="mut" style="margin-bottom:6px">${onEE?"Isi langsung di kolom harga setiap fungsi; pembulatan (VIII) otomatis menjadi harga EE fungsi tersebut. Perlengkapan diisi nominal, GP (provide by GP), atau REIMB.":"Perhitungan komponen SDM per fungsi (mode lihat)."}</div><div class="tw">${ekMulti(p.items.map((x,k)=>({nm:x.uraian,K:(p.eeK=p.eeK||[])[k]||(p.eeK[k]=defK(p)),i:k,qty:x.qty})),onEE,p.id,{qty:1,th:p.form.tahun})}</div>`:""}
@@ -5642,7 +5649,7 @@ function revBlock(p,i){
   h+=`<div class="sec-t">Narasi form pengajuan</div><div class="fg">${J.fields.map(f=>`<div class="fld ${f[2]==="area"?"full":""}"><label>${f[1]}</label>${f[2]==="select"?`<select class="inp" data-rf="${f[0]}" data-id="${p.id}">${f[3].map(o=>`<option ${p.form[f[0]]===o?"selected":""}>${o}</option>`).join("")}</select>`:`<textarea class="inp upc" rows="2" data-rf="${f[0]}" data-id="${p.id}">${esc(p.form[f[0]]||"")}</textarea>`}</div>`).join("")}</div>
   <div class="itbar"><b>Item ${i+1}</b> — ${esc(it.uraian)}</div>${tinjauItem(p,i)}
   <div class="fg"><div class="fld"><label>Harga ${isEE(p)?"KPS (EE)":"disetujui"} — Item ${i+1}</label><input class="inp" type="number" min="0" step="1000" data-ree="${i}" data-id="${p.id}" value="${p.eeH[i]}"></div></div>
-  <div class="sec-t">Dokumen Item ${i+1}</div>${itemDocs(p,i).map(d=>`<div class="vr"><span class="m ${d.file?"ok":"na"}">${d.file?"✓":"○"}</span><div class="tx"><b style="font-weight:600">${d.n}</b>${(it.docBy||{})[d.k]?` <span class="tag t-a">DIUNGGAH ${esc(it.docBy[d.k])}</span>`:""}<div class="f">${d.file?esc(d.file):"Belum ada"}</div></div><span class="pupl"><label class="btn ghost sm">⇪ ${d.file?"Ganti":"Unggah"} (PPJA)<input type="file" data-pup="${i}:${d.k}" data-id="${p.id}"></label><button class="btn ghost sm" data-act="pSample" data-id="${p.id}" data-i="${i}" data-k="${d.k}">Contoh</button></span></div>`).join("")}
+  <div class="sec-t">Dokumen Item ${i+1}</div>${itemDocs(p,i).map(d=>`<div class="vr"><span class="m ${d.file?"ok":"na"}">${d.file?"✓":"○"}</span><div class="tx"><b style="font-weight:600">${d.n}</b>${(it.docBy||{})[d.k]?` <span class="tag t-a">DIUNGGAH ${esc(it.docBy[d.k])}</span>`:""}<div class="f">${d.file?"Terlampir":"Belum ada"}</div></div><span class="pupl"><label class="btn ghost sm">⇪ ${d.file?"Ganti":"Unggah"} (PPJA)<input type="file" data-pup="${i}:${d.k}" data-id="${p.id}"></label><button class="btn ghost sm" data-act="pSample" data-id="${p.id}" data-i="${i}" data-k="${d.k}">Contoh</button></span></div>`).join("")}
   <div class="attw"><div class="atth"><label class="link addatt" style="cursor:pointer">+ Add Attachment (PPJA)<input type="file" accept=".xlsx,.docx,.pdf" data-pxup="${i}" data-id="${p.id}" style="display:none"></label><button class="link" data-act="pxSample" data-id="${p.id}" data-i="${i}">pakai contoh</button><span class="mut">Accepts .xlsx, .docx, .pdf files up to 4MB.</span></div></div>
   ${dr.length?`<div class="sec-t">Perubahan yang akan diterbitkan (${dr.length})</div>${dr.map(c=>`<div class="vr"><span class="m na">✎</span><div class="tx">${c.i===null?"Form":"Item "+(c.i+1)} · ${esc(c.label)}<div class="f">${esc(c.old)} → <b>${esc(c.nw)}</b></div></div></div>`).join("")}`:""}
   <div class="acts vact"><button class="btn green" data-act="revPub" data-id="${p.id}" ${dr.length?"":"disabled"}>📢 Terbitkan UPDATE ITEM ke-${(p.upd||0)+1}</button><button class="btn ghost" data-act="revCancel" data-id="${p.id}">Batalkan revisi</button></div>
