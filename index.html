@@ -1830,6 +1830,7 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .tile2.tcard>b{font-size:12.5px!important}
 .tile2.tcard .tgo{padding:3px 16px;font-size:11.5px;margin-top:auto}
 .tile2.tcard .tbd{top:7px!important;right:7px!important;font-size:9px!important;padding:1px 6px!important}
+.ckside .cks{padding:8px 0;border-top:1px solid #EEF2F6;font-size:13px;line-height:1.45}.ckside .cks:first-of-type{border-top:0}
 </style>
 </head>
 <body>
@@ -7227,6 +7228,11 @@ renderAjukan=(o=>function(){if(AJM==="cek"){try{$("#mbar").innerHTML="";$("#ajM"
  const r=o.apply(this,arguments);if(!canSubmit()&&hasAjk()){const L=$("#fLeft");if(L&&!L.querySelector("[data-m=cek]"))L.insertAdjacentHTML("beforeend",`<div class="acts" style="margin-top:12px"><button class="btn ghost sm" data-act="ajMode" data-m="cek">▦ Informasi kelengkapan dokumen</button></div>`);}return r;})(renderAjukan);
 navItems=(o=>function(){const L=o.apply(this,arguments);return hasAjk()?L.filter(x=>x.v!=="cek"):L;})(navItems);
 goView=(o=>function(v){if(v==="cek"&&hasAjk()){AJM="cek";return o.call(this,"ajukan");}return o.apply(this,arguments);})(goView);
+/* Informasi kelengkapan dokumen: ringkasan PPJA/alur di kolom samping */
+renderCek=(o=>function(){const r=o.apply(this,arguments);try{if(VIEW!=="ajukan"||AJM!=="cek")return r;const S=$("#fSide"),m=document.querySelector("#ucards .ckm"),dt=document.querySelector("#ucards details.ckd");
+ if(!S)return r;if(!m){S.innerHTML="";return r;}
+ const items=[...m.children].map(x=>`<div class="cks">${x.innerHTML}</div>`).join("");
+ S.innerHTML=`<div class="card ckside"><h3>Informasi PPJA</h3>${items}${dt?`<details class="ckd" style="margin-top:10px">${dt.innerHTML}</details>`:""}</div>`;m.remove();if(dt)dt.remove();}catch(_){}return r;})(renderCek);
 
 </script>
 </body>
