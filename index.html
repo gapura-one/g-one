@@ -7081,7 +7081,7 @@ function exvRender(){const W=document.getElementById("exv");if(!W)return;const a
  const k=(l,v,s,c)=>`<div class="exk ${c||""}"><span>${l}</span><b>${v}</b>${s?`<small>${s}</small>`:""}</div>`;
  const stl={run:"Dalam proses",done:"Selesai",back:"Dikembalikan",x:"Ditolak / batal"};
  const cabs=[...new Set(all.map(p=>p.cab))].sort();
- const card=p=>{const ps=posisi(p);return `<button class="exc ${p.id===EXV.sel?"on":""}" data-act="exvSel" data-id="${p.id}"><span class="exi">${esc(p.cab)}</span><div class="exb"><b>${esc(tCase(p.perihal))}</b><small>${p.id} · PPJA ${p.unit} — ${esc(UNITS[p.unit]?UNITS[p.unit].nama:"")}</small><div class="ext"><span class="tag t-o">${esc(ps.n)}</span>${bodOf(p)?`<span class="tag ${bodSt(p)==="ttd"?"t-g":"t-w"}">${bodSt(p)==="ttd"?"✓ TTD BOD":"TTD BOD"}</span>`:""}<span class="exn">${rpS(total(p))}</span></div></div></button>`;};
+ const card=p=>{const ps=posisi(p);return `<button class="exc ${p.id===EXV.sel?"on":""}" data-act="exvSel" data-id="${p.id}"><span class="exi">${esc(p.cab)}</span><div class="exb"><b>${esc(tCase(p.perihal))}</b><small>${p.id}</small><div class="ext"><span class="tag t-o">${esc(ps.n)}</span>${bodOf(p)?`<span class="tag ${bodSt(p)==="ttd"?"t-g":"t-w"}">${bodSt(p)==="ttd"?"✓ TTD BOD":"TTD BOD"}</span>`:""}<span class="exn">${rpS(total(p))}</span></div></div></button>`;};
  let det='<div class="empty">Tidak ada pengajuan.</div>';
  if(p){const ps=posisi(p),st=p.status,step=st==="TERBIT"?4:st==="APPROVAL"?3:["MENUNGGU"].includes(st)?2:1,lama=hari(p.tKirim||p.tBuat,p.tTerbit||now);
   const hs=[...(p.hist||[])].slice(-4).reverse();
