@@ -1802,6 +1802,8 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .bdform{background:#fff;border:1px solid #E6EBF0;border-radius:10px;padding:10px 12px;margin:6px 0}
 .dchip{border:1px solid #CBD5E1;background:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.dchip.on{background:#023E8D;color:#fff;border-color:#023E8D}
 .bodwrap .bodbox{margin-top:6px}
+.exbod input{width:auto!important;flex:none!important;margin:0}
+.exf .exbod input{flex:none!important;min-width:0!important;width:16px!important;height:16px}
 </style>
 </head>
 <body>
@@ -7074,7 +7076,7 @@ tilesHtml=(o=>function(){return o.apply(this,arguments).replace(/(<button class=
 const EXV={sel:null,q:"",st:"",cab:"",bod:false};
 const isBOD=()=>!!ACC&&(T()==="dir"||T()==="sekdir");
 function exvStage(p){const s=p.status;return s==="TERBIT"?"done":["KEMBALI","NDKBL"].includes(s)?"back":["DITOLAK","BATAL"].includes(s)?"x":"run";}
-function exvList(){const q=EXV.q.toLowerCase();return VIS().filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));}
+function exvList(){const q=EXV.q.toLowerCase();let B;try{B=filtered();}catch(_){B=VIS();}return B.filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));}
 function exvRender(){const W=document.getElementById("exv");if(!W)return;const all=VIS(),L=exvList(),now=new Date();
  if(!EXV.sel||!L.find(p=>p.id===EXV.sel))EXV.sel=L[0]?L[0].id:null;const p=EXV.sel&&byId(EXV.sel);
  const run=all.filter(p=>exvStage(p)==="run"),late=run.filter(p=>["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p));
@@ -7097,9 +7099,9 @@ function exvRender(){const W=document.getElementById("exv");if(!W)return;const a
   <div class="exw"><div class="exl">${L.map(card).join("")||'<div class="empty">Tidak ada pengajuan yang cocok.</div>'}</div><div class="exd">${det}</div></div></div>`;}
 renderRows=(o=>function(){const r=o.apply(this,arguments);const V=document.getElementById("v-monitor");if(!V)return r;let W=document.getElementById("exv");const cols=V.querySelector(".cols");
  const pipeC=V.querySelector("#pipe")&&V.querySelector("#pipe").closest(".card"),kp=V.querySelector("#kpis");
- if(isBOD()){if(!W){W=document.createElement("div");W.id="exv";cols.parentNode.insertBefore(W,cols);}cols.style.display="none";W.style.display="";if(pipeC)pipeC.style.display="none";if(kp)kp.style.display="none";exvRender();}
+ if(isBOD()){if(!W){W=document.createElement("div");W.id="exv";cols.parentNode.insertBefore(W,cols);}cols.style.display="none";W.style.display="";if(pipeC)pipeC.style.display="";if(kp)kp.style.display="none";exvRender();}
  else{if(W)W.style.display="none";if(cols)cols.style.display="";if(pipeC)pipeC.style.display="";if(kp)kp.style.display="";}return r;})(renderRows);
-onAct8=(o=>function(act,a){if(act==="exvSel"){EXV.sel=a.dataset.id;exvRender();return true;}if(act==="exvReset"){EXV.q="";EXV.st="";EXV.cab="";EXV.bod=false;exvRender();return true;}return o.apply(this,arguments);})(onAct8);
+onAct8=(o=>function(act,a){if(act==="exvSel"){EXV.sel=a.dataset.id;exvRender();return true;}if(act==="exvReset"){EXV.q="";EXV.st="";EXV.cab="";EXV.bod=false;if(S.stage!==null){S.stage=null;renderAll();}else exvRender();return true;}return o.apply(this,arguments);})(onAct8);
 document.addEventListener("input",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exq"){EXV.q=t.value;const pos=t.selectionStart;exvRender();const n=document.getElementById("exq");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(_){}}}});
 document.addEventListener("change",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exs"){EXV.st=t.value;exvRender();}if(t.id==="exc"){EXV.cab=t.value;exvRender();}if(t.id==="exb"){EXV.bod=t.checked;exvRender();}});
 /* ===== Dokumen Direksi (kewenangan BOD) — sekretaris Direksi: disposisi berulang ke pejabat struktural, unduh tindak lanjut, TTD basah & approve atas nama BOD. BOD hanya meninjau. ===== */
