@@ -7201,7 +7201,7 @@ tilesHtml=(o=>function(){return o.apply(this,arguments).replace(/(<button class=
 const EXV={sel:null,q:"",st:"",cab:"",bod:false};
 const isBOD=()=>!!ACC&&(T()==="dir"||T()==="sekdir");
 function exvStage(p){const s=p.status;return s==="TERBIT"?"done":["KEMBALI","NDKBL"].includes(s)?"back":["DITOLAK","BATAL"].includes(s)?"x":"run";}
-function exvList(){const q=EXV.q.toLowerCase(),now=new Date(),kp=EXV.kp||"";let B;try{B=filtered();}catch(_){B=VIS();}const R2=B.filter(p=>!kp||kp==="nil"||(kp==="run"?exvStage(p)==="run":kp==="done"?p.status==="TERBIT":kp==="late"?(["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p)):true)).filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));return kp==="nil"?R2.sort((a,b)=>total(b)-total(a)):R2;}
+function exvList(){const q=EXV.q.toLowerCase(),now=new Date(),kp=EXV.kp||"";let B;try{B=filtered();}catch(_){B=VIS();}const R2=B.filter(p=>!kp||kp==="nil"||(kp==="run"?exvStage(p)==="run":kp==="done"?p.status==="TERBIT":kp==="late"?(["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p)):true)).filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,regNo(p.id),p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));return kp==="nil"?R2.sort((a,b)=>total(b)-total(a)):R2;}
 function exvRender(){const W=document.getElementById("exv");if(!W)return;const all=VIS(),L=exvList(),now=new Date();
  if(!EXV.sel||!L.find(p=>p.id===EXV.sel))EXV.sel=L[0]?L[0].id:null;const p=EXV.sel&&byId(EXV.sel);
  const run=all.filter(p=>exvStage(p)==="run"),late=run.filter(p=>["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p));
@@ -7334,6 +7334,21 @@ renderCek=(o=>function(){const r=o.apply(this,arguments);try{if(VIEW!=="ajukan"|
  c.insertAdjacentHTML("afterend",`<div class="card ckside"><h3>Informasi PPJA</h3>${items}${dt?`<details class="ckd" style="margin-top:10px">${dt.innerHTML}</details>`:""}</div>`);m.remove();if(dt)dt.remove();}catch(_){}return r;})(renderCek);
 renderAjukan=(o=>function(){const r=o.apply(this,arguments);const fl=document.querySelector("#v-ajukan .flay");if(fl)fl.classList.toggle("cekm",AJM==="cek");return r;})(renderAjukan);
 function slaShort(sl){const t=String(sl&&sl.t||"");if(/lewat/i.test(t))return "Lewat batas";const m=t.match(/sisa\s+(\d+)\s+(hari kerja|hari|jam)/i);if(m)return "Sisa "+m[1]+" "+(m[2].toLowerCase()==="jam"?"jam":"hr");return t.replace(/^[^:]*:\s*/,"");}
+/* ===== Nomor registrasi G-ONE: G-ONE/(cabang)/(bulan pengajuan)/(tahun 2 digit)-(nomor unik) =====
+   Kode internal (GONE-2026-0151) tetap dipakai sebagai kunci data; yang tampil ke pengguna memakai format baru.
+   Bagian hasil split item diberi akhiran .2 (mis. G-ONE/BPN/11/26-0156.2). */
+function regNo(id){const m=String(id||"").match(/^GONE-(\d{4})-(\d{4})(-B)?$/);if(!m)return id;const p=(typeof byId==="function")?(byId(id)||byId(`GONE-${m[1]}-${m[2]}`)):null;
+ const t=p&&(p.tBuat||p.tKirim)?new Date(p.tBuat||p.tKirim):null,mm=t?String(t.getMonth()+1).padStart(2,"0"):"--",yy=t?String(t.getFullYear()).slice(-2):m[1].slice(-2),cb=p&&p.cab?p.cab:"KPS";
+ return `G-ONE/${cb}/${mm}/${yy}-${m[2]}${m[3]?".2":""}`;}
+const RGX=/GONE-\d{4}-\d{4}(?:-B)?(?![\w-])/g;
+function regFix(root){if(!root)return;const skip=n=>{for(let e=n.parentElement;e;e=e.parentElement){if(e.isContentEditable||/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION)$/.test(e.tagName))return true;}return false;};
+ const w=document.createTreeWalker(root.nodeType===3?root.parentNode||root:root,NodeFilter.SHOW_TEXT,null);const L=[];let n;while((n=w.nextNode()))if(n.nodeValue.indexOf("GONE-")>=0)L.push(n);
+ L.forEach(t=>{if(skip(t))return;const v=t.nodeValue.replace(RGX,x=>regNo(x));if(v!==t.nodeValue)t.nodeValue=v;});}
+(()=>{let q=[],pend=false;const flush=()=>{pend=false;const Q=q;q=[];Q.forEach(regFix);};
+ new MutationObserver(ms=>{ms.forEach(m=>{if(m.type==="characterData")q.push(m.target);else m.addedNodes.forEach(a=>{if(a.nodeType===1||a.nodeType===3)q.push(a);});});if(!pend&&q.length){pend=true;queueMicrotask(flush);}})
+  .observe(document.body,{childList:true,subtree:true,characterData:true});regFix(document.body);})();
+document.addEventListener("mouseover",e=>{const t=e.target&&e.target.closest&&e.target.closest("[title*='GONE-']");if(t)t.title=t.title.replace(RGX,x=>regNo(x));},{passive:true});
+hay=(o=>function(p){const h=o.apply(this,arguments);return Array.isArray(h)?[...h,regNo(p.id)]:(h+" "+regNo(p.id)).toLowerCase();})(hay);
 
 </script>
 </body>
