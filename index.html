@@ -7087,7 +7087,11 @@ onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.ro
  let x=-300,y=-300,tx=-300,ty=-300,raf=0,on=false;
  const loop=()=>{const dx=tx-x,dy=ty-y;x+=dx*.055;y+=dy*.055;const v=Math.hypot(dx,dy),st=Math.min(2.6,1+v/110),ang=Math.atan2(dy,dx)*57.2958;
   L.style.transform=`translate(${x}px,${y}px) rotate(${v>1?ang:0}deg) scale(${st},${Math.pow(st,-.3)})`;raf=v>.3?requestAnimationFrame(loop):0;};
- document.addEventListener("mousemove",e=>{tx=e.clientX+4;ty=e.clientY+6;if(!on){x=tx;y=ty;on=true;L.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
+ let lastEl=null,dark=false;const isDark=el=>{for(let n=el;n&&n!==document.documentElement;n=n.parentElement){if(n===document.body)return false;const cs=getComputedStyle(n),bi=cs.backgroundImage;
+   if(bi&&bi!=="none"&&/gradient/.test(bi)){const m=bi.match(/rgba?\([^)]+\)/g);if(m){const v=m.map(c=>c.match(/[\d.]+/g).map(Number)).filter(a=>a.length<4||a[3]>.3);if(v.length){const l=v.reduce((a,c)=>a+(.2126*c[0]+.7152*c[1]+.0722*c[2])/255,0)/v.length;return l<.82;}}}
+   const c=cs.backgroundColor.match(/[\d.]+/g);if(c&&(c.length<4||+c[3]>.5)){const[r,g,b]=c.map(Number);return (.2126*r+.7152*g+.0722*b)/255<.82;}}return false;};
+ document.addEventListener("mousemove",e=>{tx=e.clientX+4;ty=e.clientY+6;if(e.target!==lastEl){lastEl=e.target;dark=isDark(e.target);}
+  if(!dark){if(on){on=false;L.classList.remove("on");}return;}if(!on){x=tx;y=ty;on=true;L.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
  document.documentElement.addEventListener("mouseleave",()=>{on=false;L.classList.remove("on");});})();
 /* ===== develop_15 #2: item di Update lampiran bisa dilipat ===== */
 onAct8=(o=>function(act,a){if(act==="updTog"){const k=UPD.pid+":"+a.dataset.i,it=a.closest(".updit");UPD.col=UPD.col||{};UPD.col[k]=!it.classList.contains("cl");it.classList.toggle("cl",UPD.col[k]);return true;}return o.apply(this,arguments);})(onAct8);
