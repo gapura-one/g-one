@@ -1793,6 +1793,15 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .bodr .nm{flex:1;min-width:0;display:flex;flex-direction:column}.bodr .nm b{font-size:13px}.bodr .nm small{font-size:11.5px;color:#64748B;overflow-wrap:anywhere}
 .bodr input[type=file]{display:none}
 .exbod{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#334155;white-space:nowrap}
+.bdsh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 6px}.bdsh b{font-size:13px}
+.bdd{background:#fff;border:1px solid #EBDDBF;border-radius:10px;padding:10px 12px;margin:6px 0}.bdd.bdone{opacity:.9}
+.bddh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px}.bddt{margin:6px 0 2px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bdf{font-size:12.5px;margin-top:4px;overflow-wrap:anywhere}.bdr{border-left:3px solid #B9CDEB;padding:4px 0 4px 10px;margin-top:8px;font-size:12.5px}
+.bdrf{margin-top:10px;border-top:1px dashed #EBDDBF;padding-top:8px}.bdrf label{font-size:12px;font-weight:600;display:block;margin-bottom:4px}
+.bdrf input[type=file],.bdform input[type=file],.bodr input[type=file]{display:none}
+.bdform{background:#fff;border:1px solid #E6EBF0;border-radius:10px;padding:10px 12px;margin:6px 0}
+.dchip{border:1px solid #CBD5E1;background:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.dchip.on{background:#023E8D;color:#fff;border-color:#023E8D}
+.bodwrap .bodbox{margin-top:6px}
 </style>
 </head>
 <body>
@@ -2369,7 +2378,7 @@ const isPPJA=()=>T()==="ppja-admin"||T()==="ppja-appr"||T()==="ppja-rev";
 const isKP=()=>!!ACC&&T()!=="cab";
 const ME=()=>!ACC?"":T()==="cab"?"cab:"+ACC.cab:isPPJA()?"ppja:"+ACC.unit:ACC.type;
 const origP=p=>p.owner||"cab:"+p.cab;
-const canSee=p=>!!ACC&&(ALLV.includes(T())||((T()==="cab"||T()==="cab-apr")&&p.cab===ACC.cab&&!p.owner)||(isPPJA()&&!/^ND/.test(p.status)&&(p.unit===ACC.unit||p.owner===ME()||(p.collab||[]).some(c=>c.unit===ACC.unit))));
+const canSee=p=>!!ACC&&(ALLV.includes(T())||(Array.isArray((p.bod||{}).disp)&&p.bod.disp.some(d=>(d.to||[]).includes(ACC.id)))||((T()==="cab"||T()==="cab-apr")&&p.cab===ACC.cab&&!p.owner)||(isPPJA()&&!/^ND/.test(p.status)&&(p.unit===ACC.unit||p.owner===ME()||(p.collab||[]).some(c=>c.unit===ACC.unit))));
 const myCollab=p=>isPPJA()&&p.unit!==ACC.unit?(p.collab||[]).find(c=>c.unit===ACC.unit):null;
 const canContrib=(p,c)=>T()==="ppja-admin"&&!!c&&ACC.unit===c.unit&&["MENUNGGU","APPROVAL"].includes(p.status)&&c.st==="wait"&&stageOpen(p,c)&&hasDispU(p,c.unit)&&myDsp(p,c.unit);
 const canColApr=(p,c)=>T()==="ppja-appr"&&!!c&&ACC.unit===c.unit&&["MENUNGGU","APPROVAL"].includes(p.status)&&c.st==="sub";
@@ -7093,27 +7102,84 @@ renderRows=(o=>function(){const r=o.apply(this,arguments);const V=document.getEl
 onAct8=(o=>function(act,a){if(act==="exvSel"){EXV.sel=a.dataset.id;exvRender();return true;}if(act==="exvReset"){EXV.q="";EXV.st="";EXV.cab="";EXV.bod=false;exvRender();return true;}return o.apply(this,arguments);})(onAct8);
 document.addEventListener("input",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exq"){EXV.q=t.value;const pos=t.selectionStart;exvRender();const n=document.getElementById("exq");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(_){}}}});
 document.addEventListener("change",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exs"){EXV.st=t.value;exvRender();}if(t.id==="exc"){EXV.cab=t.value;exvRender();}if(t.id==="exb"){EXV.bod=t.checked;exvRender();}});
-/* ===== Dokumen Direksi: pengajuan kewenangan BOD — sekretaris Direksi upload lembar disposisi & dokumen TTD basah ===== */
+/* ===== Dokumen Direksi (kewenangan BOD) — sekretaris Direksi: disposisi berulang ke pejabat struktural, unduh tindak lanjut, TTD basah & approve atas nama BOD. BOD hanya meninjau. ===== */
 const BODU={OT:"dir-ops",OP:"dir-ops",OS:"dir-ops",OAO:"dir-ops",SBC:"dir-ops",UQ:"dir-ops",HC:"dir-hc",HM:"dir-hc",HT:"dir-hc",KF:"dir-keu",KC:"dir-keu",KR:"dir-keu",UP:"dir-keu",CA:"dir-kom",CG:"dir-kom"};
 const BODLIM=100e6;
 function bodOf(p){if(!p||p.legacy)return null;const sdm=isSdmJ(p.j)||(p.collab||[]).length;if(!sdm&&total(p)<=BODLIM)return null;return ACCS.find(a=>a.id===(sdm?"dir-hc":(BODU[p.unit]||"dir")))||null;}
 const isSek=()=>!!ACC&&T()==="sekdir";
-const bodSt=p=>{const b=p.bod||{};return b.ttd?"ttd":b.disp?"disp":"wait";};
-function bodBox(p){const D=bodOf(p);if(!D)return "";const b=p.bod||{},mine=isSek()&&ACC.dir===D.id;
- const row=(k,t,sub)=>{const f=b[k];return `<div class="bodr"><span class="m ${f?"ok":"na"}">${f?"✓":"○"}</span><div class="nm"><b>${t}</b><small>${f?`${esc(f.name)} · diunggah ${tglS(f.t)} ${jam(f.t)} oleh ${esc(f.by)}`:sub}</small></div>
-  ${f?`<button class="btn ghost sm" data-act="bodView" data-id="${p.id}" data-k="${k}">Lihat</button>`:""}${mine?`<label class="btn ${f?"ghost":"green"} sm">${f?"Ganti":"⇪ Upload"}<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-bodup="${k}" data-id="${p.id}"></label>${f?"":`<button class="btn ghost sm" data-act="bodSample" data-id="${p.id}" data-k="${k}">Pakai contoh</button>`}`:""}</div>`;};
- return `<div class="bodbox"><div class="sec-t" style="margin:0 0 6px">Dokumen Direksi — ${esc(D.jab)}</div>
-  <div class="mut" style="font-size:12px;margin-bottom:6px">Nilai kewenangan BOD · ditandatangani basah oleh ${esc(D.nama)}. ${mine?"Unggah hasil pindaian di bawah.":isSek()?"Diunggah oleh sekretaris "+esc(D.jab.toLowerCase())+".":"Diunggah oleh sekretaris Direksi."}</div>
-  ${row("disp","Lembar disposisi Direksi","Belum diunggah")}${row("ttd","Dokumen bertanda tangan basah (TTD BOD)","Belum diunggah")}</div>`;}
-function bodSet(p,k,name){const n=new Date();p.bod=p.bod||{};p.bod[k]={name,t:n,by:ACC.nama};const D=bodOf(p);
- p.hist.push({t:n,who:`Sekretaris ${D?D.jab:"Direksi"} — ${ACC.nama}`,what:k==="disp"?"Lembar disposisi Direksi diunggah":"Dokumen bertanda tangan basah Direksi diunggah",note:name,pos:"DIR"});
- toast(k==="disp"?"Lembar disposisi Direksi diunggah.":"Dokumen TTD basah Direksi diunggah.");exvRender();try{syPush();}catch(_){}}
-onAct8=(o=>function(act,a){
- if(act==="bodSample"){const p=byId(a.dataset.id),D=bodOf(p);if(!p||!isSek()||!D||ACC.dir!==D.id)return true;bodSet(p,a.dataset.k,(a.dataset.k==="disp"?"LEMBAR_DISPOSISI_":"TTD_BASAH_")+D.id.replace("dir-","").toUpperCase()+"_"+p.id+".pdf");return true;}
- if(act==="bodView"){const p=byId(a.dataset.id),f=p&&p.bod&&p.bod[a.dataset.k];if(!f)return true;openDoc((a.dataset.k==="disp"?"Lembar disposisi Direksi":"Dokumen TTD basah Direksi")+" — "+p.id,"Pindaian dokumen (simulasi)",`<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;text-align:center"><img class="ndlogo" src="${LOGO_GAPURA}" alt="Gapura"><div style="font-size:40px;margin:18px 0">📄</div><b>${esc(f.name)}</b><div class="mut" style="margin-top:6px">Diunggah ${tglS(f.t)} ${jam(f.t)} oleh ${esc(f.by)}</div><div class="mut" style="margin-top:14px;max-width:420px">Pratinjau pindaian akan tampil di sini pada versi produksi.</div></div>`);return true;}
+function bodN(p){const b=p.bod||(p.bod={});if(b.disp&&!Array.isArray(b.disp))b.disp=[{no:"DD.001",t:b.disp.t,by:b.disp.by,file:b.disp.name,to:[],note:"",resp:[]}];b.disp=b.disp||[];return b;}
+const bodSt=p=>{const b=p.bod||{};return b.apv?"apv":b.ttd?"ttd":(b.disp&&b.disp.length)?"disp":"wait";};
+const bodMine=p=>{const D=bodOf(p);return !!D&&isSek()&&ACC.dir===D.id;};
+const BODTO=()=>ACCS.filter(a=>["ppja-appr","ppja-rev","cab-apr"].includes(a.type)||["bud","kc","pgd"].includes(a.id));
+const bodToMe=(p,d)=>!!ACC&&(d.to||[]).includes(ACC.id)&&!["dir","sekdir"].includes(T());
+const BF={pid:null,to:"",note:"",file:"",ar:{}};
+const BAR=["Lengkapi dokumen yang masih kurang","Unggah kajian / analisis","Klarifikasi nilai pengajuan","Untuk diketahui"];
+function bodFiles(p){const b=bodN(p),F=[];b.disp.forEach(d=>{if(d.file)F.push(d.file);(d.resp||[]).forEach(r=>(r.files||[]).forEach(f=>F.push(f)));});return F;}
+function bodBox(p,ctx){const D=bodOf(p);if(!D)return "";const b=bodN(p),mine=bodMine(p),acc=a=>ACCS.find(x=>x.id===a),now=new Date();
+ const dispH=[...b.disp].reverse().map(d=>{const tm=bodToMe(p,d)&&!d.done;return `<div class="bdd ${d.done?"bdone":""}"><div class="bddh"><b>${esc(d.no)}</b><span class="mut">${tglS(d.t)} ${jam(d.t)} · oleh ${esc(d.by)}</span><span style="flex:1"></span>${d.done?'<span class="tag t-g">✓ Selesai</span>':(d.resp||[]).length?'<span class="tag t-a">Sudah ditindaklanjuti</span>':'<span class="tag t-w">Menunggu tindak lanjut</span>'}</div>
+  <div class="bddt">Kepada: ${(d.to||[]).map(a=>{const x=acc(a);return `<span class="dtp">${esc(x?x.nama:a)}</span><span class="mut" style="font-size:11px">${esc(x?RT[x.type]+(x.unit?" "+x.unit:x.cab?" "+x.cab:""):"")}</span>`;}).join(" ")||'<span class="mut">—</span>'}</div>
+  ${(d.ar||[]).length?`<div class="dtr">${d.ar.map(a=>`<span>${esc(a)}</span>`).join("")}</div>`:""}${d.note?`<div class="dtn">“${esc(d.note)}”</div>`:""}
+  ${d.file?`<div class="bdf">📄 ${esc(d.file)} <button class="link" data-act="bodView" data-id="${p.id}" data-f="${esc(d.file)}">Lihat</button> · <button class="link" data-act="bodDl" data-id="${p.id}" data-f="${esc(d.file)}">⬇ Unduh</button></div>`:""}
+  ${(d.resp||[]).map(r=>`<div class="bdr"><b>↳ Tindak lanjut ${esc(r.by)}</b> <span class="mut">${tglS(r.t)} ${jam(r.t)}</span>${r.note?`<div>${esc(r.note)}</div>`:""}${(r.files||[]).map(f=>`<div class="bdf">📎 ${esc(f)} <button class="link" data-act="bodView" data-id="${p.id}" data-f="${esc(f)}">Lihat</button> · <button class="link" data-act="bodDl" data-id="${p.id}" data-f="${esc(f)}">⬇ Unduh</button></div>`).join("")}</div>`).join("")}
+  ${tm?`<div class="bdrf"><label>Tindak lanjut disposisi Direksi — lampirkan dokumen yang diminta (pengajuan tidak berubah)</label><textarea class="inp" rows="2" data-bodrn="${d.no}" data-id="${p.id}" placeholder="Catatan tindak lanjut">${esc((BF.rn||{})[d.no]||"")}</textarea>
+   <div class="acts" style="margin:6px 0 0"><label class="btn ghost sm">📎 Lampirkan file<input type="file" multiple data-bodrf="${d.no}" data-id="${p.id}"></label><button class="btn ghost sm" data-act="bodRSample" data-id="${p.id}" data-no="${d.no}">Pakai contoh</button>
+   ${((BF.rf||{})[d.no]||[]).map(f=>`<span class="tag t-o">${esc(f)}</span>`).join("")}<span style="flex:1"></span><button class="btn green sm" data-act="bodResp" data-id="${p.id}" data-no="${d.no}">Kirim tindak lanjut</button></div></div>`:""}
+  ${mine&&!d.done&&!b.apv?`<div style="text-align:right;margin-top:6px"><button class="btn ghost sm" data-act="bodDone" data-id="${p.id}" data-no="${d.no}">✓ Tandai selesai</button></div>`:""}</div>`;}).join("");
+ const form=mine&&!b.apv&&BF.pid===p.id?`<div class="bdform"><div class="fg"><div class="fld"><label>Lembar disposisi Direksi (pindaian) <span class="req">*</span></label><div class="acts" style="margin:0"><label class="btn ghost sm">⇪ Pilih file<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-bodf="1" data-id="${p.id}"></label><button class="btn ghost sm" data-act="bodFSample" data-id="${p.id}">Pakai contoh</button>${BF.file?`<span class="tag t-o">${esc(BF.file)}</span>`:""}</div></div>
+  <div class="fld"><label>Diteruskan kepada <span class="req">*</span></label><select class="inp" data-bodto="1"><option value="">— pilih pejabat struktural —</option>${BODTO().map(a=>`<option value="${a.id}" ${BF.to===a.id?"selected":""}>${esc(a.nama)} — ${esc(a.jab)}</option>`).join("")}</select></div></div>
+  <div class="dtr" style="margin:8px 0">${BAR.map(x=>`<button class="dchip ${BF.ar[x]?"on":""}" data-act="bodAr" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+  <textarea class="inp" rows="2" data-bodnote="1" placeholder="Arahan Direksi (sesuai lembar disposisi)">${esc(BF.note)}</textarea>
+  <div class="acts" style="margin:8px 0 0;justify-content:flex-end"><button class="btn ghost sm" data-act="bodFormX">Batal</button><button class="btn green sm" data-act="bodSend" data-id="${p.id}">➤ Kirim disposisi</button></div></div>`:"";
+ const ttd=b.ttd;
+ return `<div class="bodbox"><div class="sec-t" style="margin:0 0 6px;display:flex;align-items:center;gap:8px">Dokumen Direksi — ${esc(D.jab)}<span style="flex:1"></span>${b.apv?`<span class="tag t-g">✓ Disetujui BOD</span>`:""}</div>
+  <div class="mut" style="font-size:12px;margin-bottom:8px">Nilai kewenangan BOD · ditandatangani basah oleh ${esc(D.nama)}. ${mine?"Anda sekretaris "+esc(D.jab.toLowerCase())+" — unggah disposisi, unduh tindak lanjut, lalu approve atas nama Direksi.":T()==="dir"?"Mode tinjau — disposisi, TTD basah & approve dikerjakan sekretaris Direksi.":isSek()?"Dikelola oleh sekretaris "+esc(D.jab.toLowerCase())+" (akun lain).":"Disposisi Direksi dikelola sekretaris Direksi."}</div>
+  <div class="bdsh"><b>Disposisi Direksi (${b.disp.length})</b><span style="flex:1"></span>${mine&&!b.apv&&BF.pid!==p.id?`<button class="btn sm" data-act="bodForm" data-id="${p.id}">⇪ Upload disposisi${b.disp.length?" baru":""}</button>`:""}${bodFiles(p).length&&(mine||T()==="dir")?`<button class="btn ghost sm" data-act="bodDlAll" data-id="${p.id}">⬇ Unduh semua (${bodFiles(p).length})</button>`:""}</div>
+  ${form}${dispH||`<div class="mut" style="font-size:12.5px;padding:4px 0 8px">Belum ada disposisi Direksi.</div>`}
+  <div class="bdsh" style="margin-top:10px"><b>Dokumen bertanda tangan basah & approval</b></div>
+  <div class="bodr"><span class="m ${ttd?"ok":"na"}">${ttd?"✓":"○"}</span><div class="nm"><b>Dokumen TTD basah Direksi</b><small>${ttd?`${esc(ttd.name)} · diunggah ${tglS(ttd.t)} ${jam(ttd.t)} oleh ${esc(ttd.by)}`:"Belum diunggah"}</small></div>
+   ${ttd?`<button class="btn ghost sm" data-act="bodView" data-id="${p.id}" data-f="${esc(ttd.name)}">Lihat</button>`:""}${mine&&!b.apv?`<label class="btn ${ttd?"ghost":"green"} sm">${ttd?"Ganti":"⇪ Upload TTD basah"}<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-bodttd="1" data-id="${p.id}"></label>${ttd?"":`<button class="btn ghost sm" data-act="bodTSample" data-id="${p.id}">Pakai contoh</button>`}`:""}</div>
+  ${b.apv?`<div class="alert a-grn" style="margin:8px 0 0"><span class="i">✓</span><div><b>Disetujui Direksi</b><span>Di-approve oleh ${esc(b.apv.by)} atas nama ${esc(D.nama)} · ${tglS(b.apv.t)} ${jam(b.apv.t)}</span></div></div>`
+   :mine?`<button class="btn green full" style="margin-top:10px" data-act="bodApv" data-id="${p.id}" ${ttd?"":"disabled"}>✓ Approve atas nama ${esc(D.jab)}</button><div class="why">${ttd?"Pastikan seluruh disposisi sudah ditindaklanjuti dan dokumen fisik sudah diserahkan ke Direksi.":"Unggah dokumen bertanda tangan basah terlebih dahulu."}</div>`:""}</div>`;}
+function bodHist(p,what,note){p.hist.push({t:new Date(),who:`Sekretaris ${(bodOf(p)||{}).jab||"Direksi"} — ${ACC.nama}`,what,note:note||"",pos:"DIR"});}
+function bodRefresh(){try{exvRender();}catch(_){}try{if(VIEW==="monitor"&&typeof renderDetail==="function"&&SEL)renderDetail();}catch(_){}try{syPush();}catch(_){}}
+function bodParty(a){const x=ACCS.find(y=>y.id===a);if(!x)return null;return x.unit?"ppja:"+x.unit:x.cab?"cab:"+x.cab:x.id;}
+function bodDl(p,f){openDoc("Unduh — "+f,"Simulasi unduh berkas",`<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;text-align:center"><img class="ndlogo" src="${LOGO_GAPURA}" alt="Gapura"><div style="font-size:40px;margin:18px 0">⬇</div><b>${esc(f)}</b><div class="mut" style="margin-top:6px">${p.id} · ${esc(p.nd)}</div><div class="mut" style="margin-top:14px;max-width:420px">Pada versi produksi file asli terunduh ke perangkat untuk dicetak & diserahkan secara fisik ke Direksi.</div></div>`);}
+onAct8=(o=>function(act,a){const p=a&&a.dataset&&a.dataset.id?byId(a.dataset.id):null;
+ switch(act){
+ case "bodForm":if(!bodMine(p))return true;Object.assign(BF,{pid:p.id,to:"",note:"",file:"",ar:{}});bodRefresh();return true;
+ case "bodFormX":BF.pid=null;bodRefresh();return true;
+ case "bodAr":BF.ar[a.dataset.x]=!BF.ar[a.dataset.x];a.classList.toggle("on",!!BF.ar[a.dataset.x]);return true;
+ case "bodFSample":if(!bodMine(p))return true;BF.file=`LEMBAR_DISPOSISI_${(bodOf(p).id.replace("dir-","")).toUpperCase()}_${p.id}_${bodN(p).disp.length+1}.pdf`;bodRefresh();return true;
+ case "bodSend":{if(!bodMine(p))return true;if(!BF.file){toast("Lampirkan pindaian lembar disposisi Direksi.");return true;}if(!BF.to){toast("Pilih pejabat yang dituju.");return true;}
+  const b=bodN(p),n=new Date(),no=`DD.${String(b.disp.length+1).padStart(3,"0")}/${(bodOf(p).id.replace("dir-","")).toUpperCase()}/${p.id.slice(-4)}`,ar=Object.keys(BF.ar).filter(k=>BF.ar[k]),to=ACCS.find(x=>x.id===BF.to);
+  b.disp.push({no,t:n,by:ACC.nama,file:BF.file,to:[BF.to],ar,note:BF.note.trim(),resp:[]});bodHist(p,`Disposisi Direksi ${no} → ${to.nama}`,[...ar,BF.note.trim()].filter(Boolean).join(" · "));
+  try{const pt=bodParty(BF.to);if(pt)notifyEmail(p,"Disposisi Direksi — mohon ditindaklanjuti",[pt],`${ar.join(", ")}${BF.note?" — "+BF.note:""}`,n,BF.to);}catch(_){}
+  BF.pid=null;toast(`Disposisi ${no} dikirim ke ${to.nama}.`);bodRefresh();return true;}
+ case "bodRSample":{BF.rf=BF.rf||{};const no=a.dataset.no;BF.rf[no]=[...(BF.rf[no]||[]),(/kajian/i.test(JSON.stringify(bodN(p).disp.find(d=>d.no===no)||{}))?"KAJIAN_ANALISIS_":"DOKUMEN_PELENGKAP_")+ACC.id.toUpperCase()+".pdf"];bodRefresh();return true;}
+ case "bodResp":{const no=a.dataset.no,d=bodN(p).disp.find(x=>x.no===no);if(!d||!bodToMe(p,d))return true;const fs=(BF.rf||{})[no]||[],nt=((BF.rn||{})[no]||"").trim();
+  if(!fs.length&&!nt){toast("Lampirkan dokumen atau isi catatan tindak lanjut.");return true;}const n=new Date();d.resp=d.resp||[];d.resp.push({t:n,by:ACC.nama,files:fs,note:nt});
+  p.hist.push({t:n,who:`${ACC.nama} (${RT[T()]})`,what:`Tindak lanjut disposisi Direksi ${no}`,note:[fs.join(", "),nt].filter(Boolean).join(" · "),pos:"DIR"});
+  const S=ACCS.find(x=>x.type==="sekdir"&&x.dir===(bodOf(p)||{}).id);try{notifyEmail(p,"Tindak lanjut disposisi Direksi "+no,["sekdir"],nt,n,S?S.id:"sekdir");}catch(_){}
+  delete BF.rf[no];if(BF.rn)delete BF.rn[no];toast("Tindak lanjut terkirim ke sekretaris Direksi.");bodRefresh();return true;}
+ case "bodDone":{const d=bodN(p).disp.find(x=>x.no===a.dataset.no);if(!d||!bodMine(p))return true;d.done=new Date();bodHist(p,`Disposisi Direksi ${d.no} ditandai selesai`);bodRefresh();return true;}
+ case "bodTSample":if(!bodMine(p))return true;bodTtd(p,`TTD_BASAH_${(bodOf(p).id.replace("dir-","")).toUpperCase()}_${p.id}.pdf`);return true;
+ case "bodApv":{const b=bodN(p);if(!bodMine(p)||!b.ttd||b.apv)return true;if(!a.dataset.c){a.dataset.c="1";a.textContent="Klik lagi untuk approve";setTimeout(()=>{if(a.isConnected){delete a.dataset.c;a.textContent="✓ Approve atas nama "+bodOf(p).jab;}},4000);return true;}
+  b.apv={t:new Date(),by:ACC.nama};b.disp.forEach(d=>{if(!d.done)d.done=b.apv.t;});bodHist(p,`Disetujui Direksi — ${bodOf(p).nama} (TTD basah)`,"Di-approve sekretaris atas nama Direksi");
+  try{notifyEmail(p,"Disetujui Direksi",["cab:"+p.cab,"ppja:"+p.unit],"Dokumen bertanda tangan basah Direksi terlampir.",b.apv.t);}catch(_){}toast("Pengajuan disetujui atas nama Direksi.");bodRefresh();return true;}
+ case "bodView":case "bodDl":{if(!p)return true;const f=a.dataset.f;if(act==="bodDl"){bodDl(p,f);return true;}
+  openDoc("Pindaian — "+f,"Pratinjau (simulasi)",`<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;text-align:center"><img class="ndlogo" src="${LOGO_GAPURA}" alt="Gapura"><div style="font-size:40px;margin:18px 0">📄</div><b>${esc(f)}</b><div class="mut" style="margin-top:6px">${p.id} · ${esc(p.nd)}</div><div class="mut" style="margin-top:14px;max-width:420px">Pratinjau pindaian akan tampil di sini pada versi produksi.</div></div>`);return true;}
+ case "bodDlAll":{if(!p)return true;const F=bodFiles(p);bodDl(p,F.length+" berkas: "+F.join(", "));return true;}}
  return o.apply(this,arguments);})(onAct8);
-document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset||t.dataset.bodup===undefined)return;const p=byId(t.dataset.id),D=bodOf(p),f=t.files&&t.files[0];if(!p||!f||!isSek()||!D||ACC.dir!==D.id)return;
- if(f.size>10*1024*1024){toast("Ukuran file maksimal 10 MB.");return;}bodSet(p,t.dataset.bodup,f.name);});
+function bodTtd(p,name){const b=bodN(p);b.ttd={name,t:new Date(),by:ACC.nama};bodHist(p,"Dokumen bertanda tangan basah Direksi diunggah",name);toast("Dokumen TTD basah diunggah.");bodRefresh();}
+document.addEventListener("change",e=>{const t=e.target;if(!t||!t.dataset)return;const ds=t.dataset;if(ds.bodf===undefined&&ds.bodttd===undefined&&ds.bodto===undefined&&ds.bodrf===undefined)return;
+ if(ds.bodto!==undefined){BF.to=t.value;return;}const p=byId(ds.id),fl=[...(t.files||[])];if(!p||!fl.length)return;if(fl.some(f=>f.size>10*1024*1024)){toast("Ukuran file maksimal 10 MB.");return;}
+ if(ds.bodf!==undefined&&bodMine(p)){BF.file=fl[0].name;bodRefresh();}
+ else if(ds.bodttd!==undefined&&bodMine(p))bodTtd(p,fl[0].name);
+ else if(ds.bodrf!==undefined){BF.rf=BF.rf||{};BF.rf[ds.bodrf]=[...(BF.rf[ds.bodrf]||[]),...fl.map(f=>f.name)];bodRefresh();}});
+document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.bodnote!==undefined)BF.note=t.value;if(t.dataset.bodrn!==undefined){BF.rn=BF.rn||{};BF.rn[t.dataset.bodrn]=t.value;}});
+/* tampilkan kotak Dokumen Direksi juga di detail pengajuan (pop-up) — penerima disposisi Direksi menindaklanjuti dari sini */
+renderDetail=(o=>function(){const D=$("#detail"),p=SEL&&byId(SEL);if(p&&D&&bodOf(p)){o.apply(this,arguments);const D2=$("#detail");if(D2&&!D2.querySelector(".bodwrap")){const k=D2.querySelector(".acts");const w=`<div class="box bodwrap"><div class="k">Dokumen Direksi (kewenangan BOD)</div>${bodBox(p)}</div>`;if(k)k.insertAdjacentHTML("afterend",w);else D2.insertAdjacentHTML("beforeend",w);}if(!isApr())detPopRender(p);return;}return o.apply(this,arguments);})(renderDetail);
+login=(o=>function(){try{NDPOP=null;const w=document.getElementById("ndPopW");if(w)w.remove();BF.pid=null;}catch(_){}return o.apply(this,arguments);})(login);
 
 </script>
 </body>
