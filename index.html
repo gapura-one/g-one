@@ -3004,7 +3004,7 @@ function renderRows(){
   else lama='<span class="mut">—</span>';
   const bc=st==="TERBIT"?"var(--green)":st==="DRAF"||/^ND/.test(st)?"var(--amber)":st==="MENUNGGU"||st==="APPROVAL"?"var(--navy)":"var(--red)";
   return `<tr data-act="sel" data-id="${p.id}" class="${SEL===p.id?"sel":""}">
-   <td data-l="No. Pengajuan" class="code">${p.id}${p.rev?` <span class="tag t-a">REV ${p.rev}</span>`:""}<div class="mut" style="font-weight:400">${esc(p.nd)}</div>${nm?`<div class="mut" style="font-weight:600;color:${u?"var(--red)":"var(--muted)"}">✉ ${nm} email${u?` · ${u} baru`:""}</div>`:""}</td>
+   <td data-l="No. Pengajuan" class="code">${p.id}${p.rev?` <span class="tag t-a">REV ${p.rev}</span>`:""}${nm?`<div class="mut" style="font-weight:600;color:${u?"var(--red)":"var(--muted)"}">✉ ${nm} email${u?` · ${u} baru`:""}</div>`:""}</td>
    <td data-l="Perihal" class="perh">${esc(tCase(p.perihal))}</td>
    <td data-l="Pengaju"><b>${p.cab}</b></td>
    <td data-l="Posisi"><b style="color:${ps.col||"var(--navy-dk)"}">${ps.n}</b></td>
