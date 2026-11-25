@@ -1836,6 +1836,10 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 #ucards.ckgrid .ckside{position:sticky;top:12px;margin:0}
 @media(max-width:1100px){#ucards.ckgrid{grid-template-columns:1fr}#ucards.ckgrid .ckside{position:static;order:-1}}
 .sub+.sla{margin-top:12px!important}.sub+div+.sla{margin-top:12px!important}
+.exkb{font:inherit;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.exkb:hover{border-color:#B9CDEB;box-shadow:0 4px 14px rgba(15,23,42,.06);transform:translateY(-1px)}
+.exkb.on{border-color:#023E8D;box-shadow:0 0 0 2px rgba(2,62,141,.12);background:#F3F8FF}
+.exkb small{font-size:10.5px!important;color:#94A3B8!important}
 </style>
 </head>
 <body>
@@ -7108,11 +7112,12 @@ tilesHtml=(o=>function(){return o.apply(this,arguments).replace(/(<button class=
 const EXV={sel:null,q:"",st:"",cab:"",bod:false};
 const isBOD=()=>!!ACC&&(T()==="dir"||T()==="sekdir");
 function exvStage(p){const s=p.status;return s==="TERBIT"?"done":["KEMBALI","NDKBL"].includes(s)?"back":["DITOLAK","BATAL"].includes(s)?"x":"run";}
-function exvList(){const q=EXV.q.toLowerCase();let B;try{B=filtered();}catch(_){B=VIS();}return B.filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));}
+function exvList(){const q=EXV.q.toLowerCase(),now=new Date(),kp=EXV.kp||"";let B;try{B=filtered();}catch(_){B=VIS();}const R2=B.filter(p=>!kp||kp==="nil"||(kp==="run"?exvStage(p)==="run":kp==="done"?p.status==="TERBIT":kp==="late"?(["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p)):true)).filter(p=>(!EXV.bod||!!bodOf(p))&&(!EXV.st||exvStage(p)===EXV.st)&&(!EXV.cab||p.cab===EXV.cab)&&(!q||[p.id,p.nd,p.perihal,p.cab,p.unit,UNITS[p.unit]&&UNITS[p.unit].nama].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.tKirim||b.tBuat)-(a.tKirim||a.tBuat));return kp==="nil"?R2.sort((a,b)=>total(b)-total(a)):R2;}
 function exvRender(){const W=document.getElementById("exv");if(!W)return;const all=VIS(),L=exvList(),now=new Date();
  if(!EXV.sel||!L.find(p=>p.id===EXV.sel))EXV.sel=L[0]?L[0].id:null;const p=EXV.sel&&byId(EXV.sel);
  const run=all.filter(p=>exvStage(p)==="run"),late=run.filter(p=>["MENUNGGU","APPROVAL"].includes(p.status)&&now>ppjaDue(p));
  const k=(l,v,s,c)=>`<div class="exk ${c||""}"><span>${l}</span><b>${v}</b>${s?`<small>${s}</small>`:""}</div>`;
+ const kb=(id,l,v,c)=>`<button class="exk exkb ${c||""} ${(EXV.kp||"")===id?"on":""}" data-act="exvK" data-k="${id}" title="Tampilkan pengajuan"><span>${l}</span><b>${v}</b><small>${(EXV.kp||"")===id?"ditampilkan ↓":"klik untuk lihat"}</small></button>`;
  const stl={run:"Dalam proses",done:"Selesai",back:"Dikembalikan",x:"Ditolak / batal"};
  const cabs=[...new Set(all.map(p=>p.cab))].sort();
  const card=p=>{const ps=posisi(p);return `<button class="exc ${p.id===EXV.sel?"on":""}" data-act="exvSel" data-id="${p.id}"><span class="exi">${esc(p.cab)}</span><div class="exb"><b>${esc(tCase(p.perihal))}</b><small>${p.id}</small><div class="ext"><span class="tag t-o">${esc(ps.n)}</span>${bodOf(p)?`<span class="tag ${bodSt(p)==="ttd"?"t-g":"t-w"}">${bodSt(p)==="ttd"?"✓ TTD BOD":"TTD BOD"}</span>`:""}<span class="exn">${rpS(total(p))}</span></div></div></button>`;};
@@ -7125,15 +7130,15 @@ function exvRender(){const W=document.getElementById("exv");if(!W)return;const a
   ${bodBox(p)}<div class="sec-t" style="margin-top:14px">Aktivitas terakhir</div><div class="exh">${hs.map(h=>`<div><span class="mut">${tglS(h.t)} ${jam(h.t)}</span><b>${esc(exvWhat(h.what))}</b></div>`).join("")||'<div class="mut">—</div>'}</div>
   <button class="btn green full" style="margin-top:12px" data-act="sel" data-id="${p.id}">📄 Lihat nota dinas &amp; dokumen →</button>`;}
  W.innerHTML=`<div class="card exvw"><h3>Executive View <span class="r">Ringkasan pengajuan seluruh cabang & unit</span></h3>
-  <div class="exks">${k("Total pengajuan",all.length,"")}${k("Nilai pengajuan",rpS(all.reduce((a,p)=>a+total(p),0)),"")}${k("Dalam proses",run.length,"",run.length?"nv":"")}${k("Selesai / rilis",all.filter(p=>p.status==="TERBIT").length,"","gr")}${k("Lewat batas SLA",late.length,"",late.length?"rd":"")}</div>
-  <div class="exf"><input type="search" class="inp" id="exq" placeholder="Cari perihal, nomor, cabang, PPJA…" value="${esc(EXV.q)}"><select class="inp" id="exs"><option value="">Semua status</option>${Object.entries(stl).map(([a,b])=>`<option value="${a}" ${EXV.st===a?"selected":""}>${b}</option>`).join("")}</select><select class="inp" id="exc"><option value="">Semua cabang</option>${cabs.map(c=>`<option ${EXV.cab===c?"selected":""}>${c}</option>`).join("")}</select><label class="exbod"><input type="checkbox" id="exb" ${EXV.bod?"checked":""}> Hanya kewenangan BOD</label><button class="btn ghost sm" data-act="exvReset">Reset</button></div>
+  <div class="exks">${kb("","Total pengajuan",all.length,"")}${kb("nil","Nilai pengajuan",rpS(all.reduce((a,p)=>a+total(p),0)),"")}${kb("run","Dalam proses",run.length,run.length?"nv":"")}${kb("done","Selesai / rilis",all.filter(p=>p.status==="TERBIT").length,"gr")}${kb("late","Lewat batas SLA",late.length,late.length?"rd":"")}</div>
+  <div class="exf"><input type="search" class="inp" id="exq" placeholder="Cari perihal, nomor, cabang, PPJA…" value="${esc(EXV.q)}"><select class="inp" id="exs"><option value="">Status</option>${Object.entries(stl).map(([a,b])=>`<option value="${a}" ${EXV.st===a?"selected":""}>${b}</option>`).join("")}</select><select class="inp" id="exc"><option value="">Cabang</option>${cabs.map(c=>`<option ${EXV.cab===c?"selected":""}>${c}</option>`).join("")}</select><label class="exbod"><input type="checkbox" id="exb" ${EXV.bod?"checked":""}> Hanya kewenangan BOD</label><button class="btn ghost sm" data-act="exvReset">Reset</button></div>
   <div class="mut" style="margin:8px 0"><span class="tag t-o">Total ${L.length} pengajuan</span></div>
   <div class="exw"><div class="exl">${L.map(card).join("")||'<div class="empty">Tidak ada pengajuan yang cocok.</div>'}</div><div class="exd">${det}</div></div></div>`;}
 renderRows=(o=>function(){const r=o.apply(this,arguments);const V=document.getElementById("v-monitor");if(!V)return r;let W=document.getElementById("exv");const cols=V.querySelector(".cols");
  const pipeC=V.querySelector("#pipe")&&V.querySelector("#pipe").closest(".card"),kp=V.querySelector("#kpis");
  if(isBOD()){if(!W){W=document.createElement("div");W.id="exv";cols.parentNode.insertBefore(W,cols);}cols.style.display="none";W.style.display="";if(pipeC)pipeC.style.display="";if(kp)kp.style.display="none";exvRender();}
  else{if(W)W.style.display="none";if(cols)cols.style.display="";if(pipeC)pipeC.style.display="";if(kp)kp.style.display="";}return r;})(renderRows);
-onAct8=(o=>function(act,a){if(act==="exvSel"){EXV.sel=a.dataset.id;exvRender();return true;}if(act==="exvReset"){EXV.q="";EXV.st="";EXV.cab="";EXV.bod=false;if(S.stage!==null){S.stage=null;renderAll();}else exvRender();return true;}return o.apply(this,arguments);})(onAct8);
+onAct8=(o=>function(act,a){if(act==="exvSel"){EXV.sel=a.dataset.id;exvRender();return true;}if(act==="exvK"){EXV.kp=a.dataset.k||"";EXV.sel=null;exvRender();const l=document.querySelector(".exl");if(l)l.scrollIntoView({behavior:"smooth",block:"start"});return true;}if(act==="exvReset"){EXV.q="";EXV.st="";EXV.cab="";EXV.bod=false;EXV.kp="";if(S.stage!==null){S.stage=null;renderAll();}else exvRender();return true;}return o.apply(this,arguments);})(onAct8);
 document.addEventListener("input",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exq"){EXV.q=t.value;const pos=t.selectionStart;exvRender();const n=document.getElementById("exq");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(_){}}}});
 document.addEventListener("change",e=>{const t=e.target;if(!t||!isBOD())return;if(t.id==="exs"){EXV.st=t.value;exvRender();}if(t.id==="exc"){EXV.cab=t.value;exvRender();}if(t.id==="exb"){EXV.bod=t.checked;exvRender();}});
 /* ===== Dokumen Direksi (kewenangan BOD) — sekretaris Direksi: disposisi berulang ke pejabat struktural, unduh tindak lanjut, TTD basah & approve atas nama BOD. BOD hanya meninjau. ===== */
