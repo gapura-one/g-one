@@ -1804,6 +1804,25 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .bodwrap .bodbox{margin-top:6px}
 .exbod input{width:auto!important;flex:none!important;margin:0}
 .exf .exbod input{flex:none!important;min-width:0!important;width:16px!important;height:16px}
+/* ===== Koreksi UI 2 ===== */
+.top .gq,.gq{display:none!important}
+@media(min-width:901px){.cols .tool{display:grid!important;grid-template-columns:minmax(200px,1.3fr) repeat(3,minmax(130px,1fr))!important;gap:10px!important}}
+.qbox{position:relative;min-width:0}.qbox input{width:100%;padding-right:36px!important}
+.qbox .qic{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:#64748B;pointer-events:none;display:flex}
+.cols{grid-template-columns:1fr 330px!important}.cols>#detail{display:block!important}
+@media(max-width:1100px){.cols{grid-template-columns:1fr!important}.cols>#detail{display:none!important}}
+.p1h{display:flex;flex-direction:column;gap:2px;margin:-4px 0 10px}.p1h b{font-size:13px;color:var(--navy,#023E8D)}.p1h span{font-size:12.5px;color:#334155}
+/* kartu jenis: warna lembut per PPJA */
+.tile2.tcard .tic{background:hsl(var(--h) 55% 95%)!important;color:hsl(var(--h) 32% 40%)!important}
+.tile2.tcard .tgo{border-color:hsl(var(--h) 30% 78%)!important;color:hsl(var(--h) 32% 36%)!important;background:#fff!important}
+.tile2.tcard:hover .tgo,.tile2.tcard.on .tgo{background:hsl(var(--h) 50% 94%)!important;color:hsl(var(--h) 35% 30%)!important;border-color:hsl(var(--h) 32% 70%)!important}
+.tile2.tcard:hover{border-color:hsl(var(--h) 35% 85%)!important}
+.tile2.tcard.on{border-color:hsl(var(--h) 35% 62%)!important;box-shadow:0 0 0 3px hsl(var(--h) 45% 93%)!important}
+.tile2.tcard .tbd{background:hsl(var(--h) 45% 96%)!important;color:hsl(var(--h) 28% 38%)!important}
+.tile2.tcard::before{display:block!important;content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:14px 14px 0 0;background:hsl(var(--h) 45% 82%)}
+.cols>*{min-width:0}.cols>.card>div[style*="overflow-x"]{max-width:100%}
+.tile2.tcard .tbd::before,.tile2.tcard .tbd::after{display:none!important}
+.cols{grid-template-columns:1fr 300px!important}#rows td.perh{min-width:220px}
 </style>
 </head>
 <body>
@@ -1862,8 +1881,8 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
           <div class="card">
             <h3>Daftar Pengajuan <span class="r" id="cnt"></span></h3>
             <div class="tool">
-              <input type="search" id="q" placeholder="Cari nomor pengajuan, nomor ND / EE, nama barang, part number, cabang, kode akun…" autocomplete="off">
-              <select id="fSt"><option value="">Semua status</option><option value="MENUNGGU">Verifikasi PPJA</option><option value="CABANG">Menunggu pengaju</option><option value="XB">Ditolak / batal</option><option value="DRAF">Draf revisi</option><option value="TERBIT">EE / Persetujuan rilis</option></select>
+              <div class="qbox"><input type="search" id="q" autocomplete="off" aria-label="Cari pengajuan"><span class="qic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span></div>
+              <select id="fSt"><option value="">Status</option><option value="MENUNGGU">Verifikasi PPJA</option><option value="CABANG">Menunggu pengaju</option><option value="XB">Ditolak / batal</option><option value="DRAF">Draf revisi</option><option value="TERBIT">EE / Persetujuan rilis</option></select>
               <select id="fCab"></select>
               <select id="fUnit"></select>
             </div>
@@ -1875,7 +1894,7 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
               <button class="link" data-act="reset" style="margin-left:6px">Hapus filter</button></div>
             <div style="overflow-x:auto">
               <table>
-                <thead><tr><th>No. Pengajuan</th><th>Perihal / Kode akun</th><th style="text-align:center">Pengaju</th><th>Posisi &amp; proses saat ini</th><th>Progres</th><th>Status</th><th style="text-align:right">Nominal</th><th>Lama</th></tr></thead>
+                <thead><tr><th>No. Pengajuan</th><th>Perihal</th><th style="text-align:center">Pengaju</th><th>Posisi saat ini</th><th>Progres</th><th>Status</th><th style="text-align:right">Nominal</th><th>Lama</th></tr></thead>
                 <tbody id="rows"></tbody>
               </table>
             </div>
@@ -2878,9 +2897,9 @@ function renderRows(){
   const bc=st==="TERBIT"?"var(--green)":st==="DRAF"||/^ND/.test(st)?"var(--amber)":st==="MENUNGGU"||st==="APPROVAL"?"var(--navy)":"var(--red)";
   return `<tr data-act="sel" data-id="${p.id}" class="${SEL===p.id?"sel":""}">
    <td data-l="No. Pengajuan" class="code">${p.id}${p.rev?` <span class="tag t-a">REV ${p.rev}</span>`:""}<div class="mut" style="font-weight:400">${esc(p.nd)}</div>${nm?`<div class="mut" style="font-weight:600;color:${u?"var(--red)":"var(--muted)"}">✉ ${nm} email${u?` · ${u} baru`:""}</div>`:""}</td>
-   <td data-l="Perihal">${esc(tCase(p.perihal))}<div class="mut">${p.items.length} item · ${[...new Set(p.items.map(x=>x.akun))].join(", ")} · PPJA ${p.unit}</div></td>
+   <td data-l="Perihal" class="perh">${esc(tCase(p.perihal))}</td>
    <td data-l="Pengaju"><b>${p.cab}</b></td>
-   <td data-l="Posisi"><b style="color:${ps.col||"var(--navy-dk)"}">${ps.n}</b>${ps.s?`<div class="mut" style="font-style:italic">${esc(ps.s)}</div>`:""}${ps.tag?`<div style="margin-top:3px">${ps.tag}</div>`:""}</td>
+   <td data-l="Posisi"><b style="color:${ps.col||"var(--navy-dk)"}">${ps.n}</b></td>
    <td data-l="Progres"><span class="bar"><i style="width:${step*10}%;background:${bc}"></i></span> <span class="mut">${step}/10</span></td>
    <td data-l="Status">${stPill(p)}${updUnseen(p)?'<div style="margin-top:4px"><span class="tag t-upd">📢 UPDATE ITEM</span></div>':p.upd?`<div class="mut" style="margin-top:3px">UPDATE ke-${p.upd}</div>`:""}</td><td data-l="Nominal" class="nom">${rpS(total(p))}</td><td data-l="Lama">${lama}</td></tr>`+revGhost(p);}).join("");
 }
@@ -6427,8 +6446,8 @@ document.addEventListener("pointerdown",e=>{const h=e.target.closest(".mrz");if(
 /* ================= INIT ================= */
 autoCheck();SEEDING=false;
 document.title=APPNAME+" — G-ONE";
-$("#fCab").innerHTML='<option value="">Semua cabang</option>'+Object.entries(CAB).map(([k,v])=>`<option value="${k}">${k}</option>`).join("");
-$("#fUnit").innerHTML='<option value="">Semua PPJA / UST</option>'+Object.entries(UNITS).map(([k,u])=>`<option value="${k}">PPJA ${k} — ${u.nama}</option>`).join("");
+$("#fCab").innerHTML='<option value="">Cabang</option>'+Object.entries(CAB).map(([k,v])=>`<option value="${k}">${k}</option>`).join("");
+$("#fUnit").innerHTML='<option value="">PPJA / UST</option>'+Object.entries(UNITS).map(([k,u])=>`<option value="${k}">PPJA ${k} — ${u.nama}</option>`).join("");
 try{const r=localStorage.getItem("gone_rem");if(r){LG.email=r;LG.rem=true;}}catch(_){}
 document.querySelectorAll("img[data-logo]").forEach(i=>i.src=i.dataset.logo==="gone"?LOGO_GONE:LOGO_GAPURA);
 renderLogin();
@@ -7184,6 +7203,23 @@ renderDetail=(o=>function(){const D=$("#detail"),p=SEL&&byId(SEL);if(p&&D&&bodOf
 login=(o=>function(){try{NDPOP=null;const w=document.getElementById("ndPopW");if(w)w.remove();BF.pid=null;}catch(_){}return o.apply(this,arguments);})(login);
 
 function exvWhat(w){return String(w||"").split(" → ")[0].replace(/\s*\((?=[^)]*[A-Z]{3})[A-Z][A-Z0-9 .,'&-]+\)/g,"").replace(/\s+—\s+[A-Z][A-Z .,']+$/,"").trim();}
+/* ===== Koreksi UI 2 ===== */
+/* panel kanan Monitor: hanya Proses Tahap 1 pengajuan terpilih; keterangan lengkap di pop-up saat diklik */
+renderDetail=(o=>function(){const r=o.apply(this,arguments);try{if(isApr())return r;const D=$("#detail"),p=SEL&&byId(SEL);if(!D)return r;
+ if(!p||!canSee(p)){D.innerHTML=`<h3>Proses Tahap 1</h3><div class="empty">Pilih pengajuan pada daftar.</div>`;return r;}
+ const bx=[...D.querySelectorAll(":scope>.box")].find(b=>/^\s*Proses Tahap 1/.test((b.querySelector(".k")||{}).textContent||""));
+ const t1=bx?bx.cloneNode(true):null;if(t1){t1.classList.remove("coll","shut");const k=t1.querySelector(".k");if(k)k.remove();}
+ D.innerHTML=`<h3>Proses Tahap 1</h3><div class="p1h"><b>${p.id}</b><span>${esc(tCase(p.perihal))}</span><div style="margin-top:4px">${stPill(p)}</div></div>${t1?t1.outerHTML:""}
+  <button class="btn ghost full" data-act="sel" data-id="${p.id}" style="margin-top:8px">Lihat detail lengkap →</button>`;}catch(_){}return r;})(renderDetail);
+/* Kelengkapan Dokumen dipindah ke Ajukan Permohonan (tab "Informasi kelengkapan dokumen") */
+(()=>{const u=document.getElementById("ucards");if(u)u.id="ucardsOld";})();
+const hasAjk=()=>canSubmit()||SEEALL.includes(T());
+ajTabs=(o=>function(){return o.apply(this,arguments).replace(/<\/div>$/,`<button class="${AJM==="cek"?"on":""}" data-act="ajMode" data-m="cek">▦ Informasi kelengkapan dokumen</button></div>`);})(ajTabs);
+renderAjukan=(o=>function(){if(AJM==="cek"){try{$("#mbar").innerHTML="";$("#ajM").classList.remove("on");document.body.classList.remove("fm-on");}catch(_){}
+  $("#fLeft").innerHTML=(canSubmit()?ajTabs():`<div class="mtabs"><button class="on">▦ Informasi kelengkapan dokumen</button></div>`)+`<div id="ucards" class="ucards"></div>`;$("#fSide").innerHTML="";renderCek();return;}
+ const r=o.apply(this,arguments);if(!canSubmit()&&hasAjk()){const L=$("#fLeft");if(L&&!L.querySelector("[data-m=cek]"))L.insertAdjacentHTML("beforeend",`<div class="acts" style="margin-top:12px"><button class="btn ghost sm" data-act="ajMode" data-m="cek">▦ Informasi kelengkapan dokumen</button></div>`);}return r;})(renderAjukan);
+navItems=(o=>function(){const L=o.apply(this,arguments);return hasAjk()?L.filter(x=>x.v!=="cek"):L;})(navItems);
+goView=(o=>function(v){if(v==="cek"&&hasAjk()){AJM="cek";return o.call(this,"ajukan");}return o.apply(this,arguments);})(goView);
 
 </script>
 </body>
