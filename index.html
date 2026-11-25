@@ -1946,6 +1946,18 @@ body{background:#F7F8FA!important}
 #pipe .pstep:not(.lk):hover .nm{color:#15803d}
 @keyframes pipePulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.35);opacity:0}100%{transform:scale(1.35);opacity:0}}
 @media(prefers-reduced-motion:reduce){#pipe .pstep .dot::after{animation:none}}
+/* panel Detail Pengajuan (kolom kanan sempit): header & tombol rapi */
+#detail .hd{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:6px!important}
+#detail .hd>b{font-size:15px!important;white-space:nowrap;letter-spacing:-.2px}
+#detail .hd>span[style*="margin-left:auto"]{margin-left:0!important}
+#detail .hd .pill{max-width:100%;white-space:normal}
+#detail .sub{margin-top:4px}
+#detail>.sla{display:block!important;margin:10px 0 0!important}
+#detail>.acts{display:flex!important;flex-wrap:wrap;gap:8px!important;margin:12px 0!important}
+#detail>.acts .btn{flex:1 1 auto;justify-content:center}
+#detail>.acts .btn[data-act=toverif]{flex-basis:100%}
+#detail>.btn.full,#detail button.full{white-space:normal;line-height:1.35;padding:10px 14px}
+#detail{padding-bottom:70px}
 </style>
 </head>
 <body>
