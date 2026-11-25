@@ -6991,7 +6991,7 @@ onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.ro
 (()=>{if(!matchMedia("(pointer:fine)").matches||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
  const L=document.createElement("div");L.className="curglow";document.body.appendChild(L);
  let x=-300,y=-300,tx=-300,ty=-300,raf=0,on=false;
- const loop=()=>{const dx=tx-x,dy=ty-y;x+=dx*.13;y+=dy*.13;const v=Math.hypot(dx,dy),st=Math.min(2.4,1+v/60),ang=Math.atan2(dy,dx)*57.2958;
+ const loop=()=>{const dx=tx-x,dy=ty-y;x+=dx*.055;y+=dy*.055;const v=Math.hypot(dx,dy),st=Math.min(2.6,1+v/110),ang=Math.atan2(dy,dx)*57.2958;
   L.style.transform=`translate(${x}px,${y}px) rotate(${v>1?ang:0}deg) scale(${st},${Math.pow(st,-.3)})`;raf=v>.3?requestAnimationFrame(loop):0;};
  document.addEventListener("mousemove",e=>{tx=e.clientX+4;ty=e.clientY+6;if(!on){x=tx;y=ty;on=true;L.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
  document.documentElement.addEventListener("mouseleave",()=>{on=false;L.classList.remove("on");});})();
