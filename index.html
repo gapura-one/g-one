@@ -7088,7 +7088,7 @@ function exvRender(){const W=document.getElementById("exv");if(!W)return;const a
   det=`<div class="exdh"><span class="exi lg">${esc(p.cab)}</span><div><b>${esc(tCase(p.perihal))}</b><small>${p.id} · ${esc(p.nd)}</small><div style="margin-top:6px">${stPill(p)}</div></div></div>
   <div class="exg">${k("Nominal pengajuan",rpS(total(p)),p.items.length+" item")}${k("Posisi saat ini",esc(ps.n),ps.s?esc(ps.s):"")}${k("Lama proses",lama+" hari",st==="TERBIT"?"sampai rilis":"berjalan")}${k("Progres Tahap 1",step+"/4",["","Nota dinas","Verifikasi PPJA","Approval PPJA","Rilis"][step])}</div>
   <div class="exst">${["Nota dinas","Verifikasi","Approval","Rilis"].map((t,i)=>`<div class="${i<step?"ok":""}"><i></i><span>${t}</span></div>`).join("")}</div>
-  ${bodBox(p)}<div class="sec-t" style="margin-top:14px">Aktivitas terakhir</div><div class="exh">${hs.map(h=>`<div><span class="mut">${tglS(h.t)} ${jam(h.t)}</span><b>${esc(h.what)}</b></div>`).join("")||'<div class="mut">—</div>'}</div>
+  ${bodBox(p)}<div class="sec-t" style="margin-top:14px">Aktivitas terakhir</div><div class="exh">${hs.map(h=>`<div><span class="mut">${tglS(h.t)} ${jam(h.t)}</span><b>${esc(exvWhat(h.what))}</b></div>`).join("")||'<div class="mut">—</div>'}</div>
   <button class="btn green full" style="margin-top:12px" data-act="sel" data-id="${p.id}">📄 Lihat nota dinas &amp; dokumen →</button>`;}
  W.innerHTML=`<div class="card exvw"><h3>Executive View <span class="r">Ringkasan pengajuan seluruh cabang & unit</span></h3>
   <div class="exks">${k("Total pengajuan",all.length,"")}${k("Nilai pengajuan",rpS(all.reduce((a,p)=>a+total(p),0)),"")}${k("Dalam proses",run.length,"",run.length?"nv":"")}${k("Selesai / rilis",all.filter(p=>p.status==="TERBIT").length,"","gr")}${k("Lewat batas SLA",late.length,"",late.length?"rd":"")}</div>
@@ -7132,14 +7132,14 @@ function bodBox(p,ctx){const D=bodOf(p);if(!D)return "";const b=bodN(p),mine=bod
   <div class="acts" style="margin:8px 0 0;justify-content:flex-end"><button class="btn ghost sm" data-act="bodFormX">Batal</button><button class="btn green sm" data-act="bodSend" data-id="${p.id}">➤ Kirim disposisi</button></div></div>`:"";
  const ttd=b.ttd;
  return `<div class="bodbox"><div class="sec-t" style="margin:0 0 6px;display:flex;align-items:center;gap:8px">Dokumen Direksi — ${esc(D.jab)}<span style="flex:1"></span>${b.apv?`<span class="tag t-g">✓ Disetujui BOD</span>`:""}</div>
-  <div class="mut" style="font-size:12px;margin-bottom:8px">Nilai kewenangan BOD · ditandatangani basah oleh ${esc(D.nama)}. ${mine?"Anda sekretaris "+esc(D.jab.toLowerCase())+" — unggah disposisi, unduh tindak lanjut, lalu approve atas nama Direksi.":T()==="dir"?"Mode tinjau — disposisi, TTD basah & approve dikerjakan sekretaris Direksi.":isSek()?"Dikelola oleh sekretaris "+esc(D.jab.toLowerCase())+" (akun lain).":"Disposisi Direksi dikelola sekretaris Direksi."}</div>
+  
   <div class="bdsh"><b>Disposisi Direksi (${b.disp.length})</b><span style="flex:1"></span>${mine&&!b.apv&&BF.pid!==p.id?`<button class="btn sm" data-act="bodForm" data-id="${p.id}">⇪ Upload disposisi${b.disp.length?" baru":""}</button>`:""}${bodFiles(p).length&&(mine||T()==="dir")?`<button class="btn ghost sm" data-act="bodDlAll" data-id="${p.id}">⬇ Unduh semua (${bodFiles(p).length})</button>`:""}</div>
   ${form}${dispH||`<div class="mut" style="font-size:12.5px;padding:4px 0 8px">Belum ada disposisi Direksi.</div>`}
   <div class="bdsh" style="margin-top:10px"><b>Dokumen bertanda tangan basah & approval</b></div>
   <div class="bodr"><span class="m ${ttd?"ok":"na"}">${ttd?"✓":"○"}</span><div class="nm"><b>Dokumen TTD basah Direksi</b><small>${ttd?`${esc(ttd.name)} · diunggah ${tglS(ttd.t)} ${jam(ttd.t)} oleh ${esc(ttd.by)}`:"Belum diunggah"}</small></div>
    ${ttd?`<button class="btn ghost sm" data-act="bodView" data-id="${p.id}" data-f="${esc(ttd.name)}">Lihat</button>`:""}${mine&&!b.apv?`<label class="btn ${ttd?"ghost":"green"} sm">${ttd?"Ganti":"⇪ Upload TTD basah"}<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-bodttd="1" data-id="${p.id}"></label>${ttd?"":`<button class="btn ghost sm" data-act="bodTSample" data-id="${p.id}">Pakai contoh</button>`}`:""}</div>
   ${b.apv?`<div class="alert a-grn" style="margin:8px 0 0"><span class="i">✓</span><div><b>Disetujui Direksi</b><span>Di-approve oleh ${esc(b.apv.by)} atas nama ${esc(D.nama)} · ${tglS(b.apv.t)} ${jam(b.apv.t)}</span></div></div>`
-   :mine?`<button class="btn green full" style="margin-top:10px" data-act="bodApv" data-id="${p.id}" ${ttd?"":"disabled"}>✓ Approve atas nama ${esc(D.jab)}</button><div class="why">${ttd?"Pastikan seluruh disposisi sudah ditindaklanjuti dan dokumen fisik sudah diserahkan ke Direksi.":"Unggah dokumen bertanda tangan basah terlebih dahulu."}</div>`:""}</div>`;}
+   :mine?`<button class="btn green full" style="margin-top:10px" data-act="bodApv" data-id="${p.id}" ${ttd?"":"disabled"}>✓ Approve atas nama ${esc(D.jab)}</button>`:""}</div>`;}
 function bodHist(p,what,note){p.hist.push({t:new Date(),who:`Sekretaris ${(bodOf(p)||{}).jab||"Direksi"} — ${ACC.nama}`,what,note:note||"",pos:"DIR"});}
 function bodRefresh(){try{exvRender();}catch(_){}try{if(VIEW==="monitor"&&typeof renderDetail==="function"&&SEL)renderDetail();}catch(_){}try{syPush();}catch(_){}}
 function bodParty(a){const x=ACCS.find(y=>y.id===a);if(!x)return null;return x.unit?"ppja:"+x.unit:x.cab?"cab:"+x.cab:x.id;}
@@ -7164,7 +7164,7 @@ onAct8=(o=>function(act,a){const p=a&&a.dataset&&a.dataset.id?byId(a.dataset.id)
  case "bodDone":{const d=bodN(p).disp.find(x=>x.no===a.dataset.no);if(!d||!bodMine(p))return true;d.done=new Date();bodHist(p,`Disposisi Direksi ${d.no} ditandai selesai`);bodRefresh();return true;}
  case "bodTSample":if(!bodMine(p))return true;bodTtd(p,`TTD_BASAH_${(bodOf(p).id.replace("dir-","")).toUpperCase()}_${p.id}.pdf`);return true;
  case "bodApv":{const b=bodN(p);if(!bodMine(p)||!b.ttd||b.apv)return true;if(!a.dataset.c){a.dataset.c="1";a.textContent="Klik lagi untuk approve";setTimeout(()=>{if(a.isConnected){delete a.dataset.c;a.textContent="✓ Approve atas nama "+bodOf(p).jab;}},4000);return true;}
-  b.apv={t:new Date(),by:ACC.nama};b.disp.forEach(d=>{if(!d.done)d.done=b.apv.t;});bodHist(p,`Disetujui Direksi — ${bodOf(p).nama} (TTD basah)`,"Di-approve sekretaris atas nama Direksi");
+  b.apv={t:new Date(),by:ACC.nama};b.disp.forEach(d=>{if(!d.done)d.done=b.apv.t;});bodHist(p,`Disetujui Direksi (TTD basah)`,"Di-approve sekretaris atas nama Direksi");
   try{notifyEmail(p,"Disetujui Direksi",["cab:"+p.cab,"ppja:"+p.unit],"Dokumen bertanda tangan basah Direksi terlampir.",b.apv.t);}catch(_){}toast("Pengajuan disetujui atas nama Direksi.");bodRefresh();return true;}
  case "bodView":case "bodDl":{if(!p)return true;const f=a.dataset.f;if(act==="bodDl"){bodDl(p,f);return true;}
   openDoc("Pindaian — "+f,"Pratinjau (simulasi)",`<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;text-align:center"><img class="ndlogo" src="${LOGO_GAPURA}" alt="Gapura"><div style="font-size:40px;margin:18px 0">📄</div><b>${esc(f)}</b><div class="mut" style="margin-top:6px">${p.id} · ${esc(p.nd)}</div><div class="mut" style="margin-top:14px;max-width:420px">Pratinjau pindaian akan tampil di sini pada versi produksi.</div></div>`);return true;}
@@ -7180,6 +7180,8 @@ document.addEventListener("input",e=>{const t=e.target;if(!t||!t.dataset)return;
 /* tampilkan kotak Dokumen Direksi juga di detail pengajuan (pop-up) — penerima disposisi Direksi menindaklanjuti dari sini */
 renderDetail=(o=>function(){const D=$("#detail"),p=SEL&&byId(SEL);if(p&&D&&bodOf(p)){o.apply(this,arguments);const D2=$("#detail");if(D2&&!D2.querySelector(".bodwrap")){const k=D2.querySelector(".acts");const w=`<div class="box bodwrap"><div class="k">Dokumen Direksi (kewenangan BOD)</div>${bodBox(p)}</div>`;if(k)k.insertAdjacentHTML("afterend",w);else D2.insertAdjacentHTML("beforeend",w);}if(!isApr())detPopRender(p);return;}return o.apply(this,arguments);})(renderDetail);
 login=(o=>function(){try{NDPOP=null;const w=document.getElementById("ndPopW");if(w)w.remove();BF.pid=null;}catch(_){}return o.apply(this,arguments);})(login);
+
+function exvWhat(w){return String(w||"").split(" → ")[0].replace(/\s*\((?=[^)]*[A-Z]{3})[A-Z][A-Z0-9 .,'&-]+\)/g,"").replace(/\s+—\s+[A-Z][A-Z .,']+$/,"").trim();}
 
 </script>
 </body>
