@@ -1872,6 +1872,14 @@ button.vic{cursor:pointer}.vic.warn{background:#FEE2E2;border-color:#FCA5A5;colo
 .vboxes .vbox.b-red{--c:hsl(355 35% 60%)!important;--bg:hsl(355 55% 98%)!important}
 .vboxes .vbox.b-grn{--c:hsl(145 26% 46%)!important;--bg:hsl(145 30% 97.5%)!important}
 .vboxes .vbox b,.vboxes .vbox .vbt{font-weight:600!important}
+/* kotak ringkasan Verifikasi — pastel seperti kartu kategori */
+.vboxes .vbox{--h:36}.vboxes .vbox.b-ind{--h:215}.vboxes .vbox.b-red{--h:355}.vboxes .vbox.b-grn{--h:145}
+.vboxes.v2 .vbox,.vboxes.v2 .vbox.b-ind,.vboxes.v2 .vbox.b-red,.vboxes.v2 .vbox.b-grn,.vboxes .vbox{--c:hsl(var(--h) 45% 74%)!important;--bg:hsl(var(--h) 55% 98%)!important;border-color:hsl(var(--h) 30% 92%)!important;background:linear-gradient(100deg,hsl(var(--h) 55% 97.5%),#fff 70%)!important}
+.vboxes .vring{background:conic-gradient(var(--c) calc(var(--p)*1%),hsl(var(--h) 25% 93%) 0)!important}
+.vboxes .vring span{width:40px!important;height:40px!important;background:hsl(var(--h) 55% 96%)!important;color:hsl(var(--h) 30% 40%)!important;font-weight:700!important}
+.vboxes .vbh{color:hsl(var(--h) 30% 42%)!important;font-weight:700!important}
+.vboxes .vbox .vic{color:hsl(var(--h) 35% 68%)!important;background:none!important;border:0!important;width:auto!important}
+.vboxes .vbox.on{box-shadow:0 0 0 2px hsl(var(--h) 40% 80%)!important}
 </style>
 </head>
 <body>
