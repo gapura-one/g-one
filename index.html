@@ -1723,7 +1723,9 @@ textarea.catv{min-height:96px;field-sizing:content;max-height:420px;resize:verti
 .rsw button{border:0;background:#fff;padding:7px 12px;font:600 12.5px inherit;font-family:inherit;cursor:pointer;color:#2b4a6f;border-left:1px solid #d6e2f0}
 .rsw button:first-child{border-left:0}.rsw button.on{background:#1f4e8c;color:#fff}
 .rsw button i{font-style:normal;background:#e11d48;color:#fff;border-radius:9px;padding:0 6px;margin-left:4px;font-size:11px}
-.curglow{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:99998;filter:blur(3px)}
+.curglow{position:fixed;left:-21px;top:-21px;width:42px;height:42px;border-radius:50%;pointer-events:none;z-index:99998;opacity:0;transition:opacity .3s;will-change:transform;
+ background:radial-gradient(circle,rgba(255,255,255,.55) 0%,rgba(200,225,255,.38) 30%,rgba(110,165,245,.16) 55%,rgba(110,165,245,0) 72%);filter:blur(1.5px)}
+.curglow.on{opacity:1}
 @media print{.curtrail,.curglow{display:none}}
 </style>
 </head>
@@ -6911,19 +6913,14 @@ function roleCnt(r){if(!ACC)return 0;const t0=ACC.type;ACC.type=r;let n=0;try{n=
 function roleStrip(){if(!ACC||!ACC.roles)return "";return `<div class="card rolesw"><span><b>Peran Anda</b> — unit ${ACC.unit} ${admIsU(ACC.unit)&&noRevU(ACC.unit)?"tanpa Admin & tanpa GH":admIsU(ACC.unit)?"tanpa Admin":"tanpa GH"}: verifikasi ${noRevU(ACC.unit)?"dan rilis ":""}dikerjakan sendiri.</span><div class="rsw">${ACC.roles.map(r=>{const n=r===ACC.type?0:roleCnt(r);return `<button class="${r===ACC.type?"on":""}" data-act="roleSw" data-r="${r}">${RLBL[r]}${n?` <i>${n}</i>`:""}</button>`;}).join("")}</div></div>`;}
 renderVerif=(o=>function(){const r=o.apply(this,arguments);const v=document.getElementById("vtop");if(v&&ACC&&ACC.roles&&!v.querySelector(".rolesw"))v.insertAdjacentHTML("afterbegin",roleStrip());return r;})(renderVerif);
 onAct8=(o=>function(act,a){if(act==="roleSw"){const r=a.dataset.r;if(ACC&&ACC.roles&&ACC.roles.includes(r)&&ACC.type!==r){ACC.type=r;VF.sel=null;VF.box=null;goView("verif");toast("Peran aktif: "+RLBL[r]+".");}return true;}return o.apply(this,arguments);})(onAct8);
-/* ===== Efek kursor: ekor cahaya tipis memanjang mengikuti arah kursor (desktop saja) ===== */
+/* ===== Efek kursor: cahaya bulat lembut di kursor; saat digerakkan tertinggal halus & memanjang searah gerak (desktop saja) ===== */
 (()=>{if(!matchMedia("(pointer:fine)").matches||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
- const cv=document.createElement("canvas");cv.className="curglow on";document.body.appendChild(cv);const g=cv.getContext("2d");
- let dpr=1;const fit=()=>{dpr=Math.min(2,window.devicePixelRatio||1);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;};fit();addEventListener("resize",fit);
- const P=[],LIFE=420;let raf=0,hx=null,hy=null;
- const draw=()=>{const now=performance.now();while(P.length&&now-P[0].t>LIFE)P.shift();g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,innerWidth,innerHeight);
-  if(P.length>1){g.lineCap="butt";
-   for(let i=1;i<P.length;i++){const a=P[i-1],b=P[i],k=1-(now-b.t)/LIFE;if(k<=0)continue;
-    g.strokeStyle=`rgba(120,175,250,${(.18*k).toFixed(3)})`;g.lineWidth=16*k+2;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();
-    g.strokeStyle=`rgba(215,235,255,${(.22*k*k).toFixed(3)})`;g.lineWidth=6*k+1;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();}}
-  if(hx!=null&&P.length){const k=Math.max(0,1-(now-P[P.length-1].t)/LIFE),r=g.createRadialGradient(hx,hy,0,hx,hy,16);r.addColorStop(0,`rgba(210,232,255,${.25*k})`);r.addColorStop(1,"rgba(120,180,255,0)");g.fillStyle=r;g.beginPath();g.arc(hx,hy,16,0,7);g.fill();}
-  raf=P.length?requestAnimationFrame(draw):0;};
- document.addEventListener("mousemove",e=>{hx=e.clientX;hy=e.clientY;P.push({x:hx,y:hy,t:performance.now()});if(P.length>80)P.shift();if(!raf)raf=requestAnimationFrame(draw);},{passive:true});})();
+ const L=document.createElement("div");L.className="curglow";document.body.appendChild(L);
+ let x=-300,y=-300,tx=-300,ty=-300,raf=0,on=false;
+ const loop=()=>{const dx=tx-x,dy=ty-y;x+=dx*.13;y+=dy*.13;const v=Math.hypot(dx,dy),st=Math.min(2.4,1+v/60),ang=Math.atan2(dy,dx)*57.2958;
+  L.style.transform=`translate(${x}px,${y}px) rotate(${v>1?ang:0}deg) scale(${st},${Math.pow(st,-.3)})`;raf=v>.3?requestAnimationFrame(loop):0;};
+ document.addEventListener("mousemove",e=>{tx=e.clientX+4;ty=e.clientY+6;if(!on){x=tx;y=ty;on=true;L.classList.add("on");}if(!raf)raf=requestAnimationFrame(loop);},{passive:true});
+ document.documentElement.addEventListener("mouseleave",()=>{on=false;L.classList.remove("on");});})();
 
 </script>
 </body>
