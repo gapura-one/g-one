@@ -6135,8 +6135,8 @@ function renderAbout(){
 let SET={tab:"akun",md:"akun",edTel:false,mq:""};
 function renderSet(){
  const a=ACC,sa=T()==="sa";
- const tabs=`<div class="mtabs"><button class="${SET.tab==="akun"?"on":""}" data-act="setTab" data-t="akun">👤 Akun</button><button class="${SET.tab==="md"?"on":""}" data-act="setTab" data-t="md">🗂 Master Data</button><button class="${SET.tab==="notif"?"on":""}" data-act="setTab" data-t="notif">🔔 Notifikasi</button></div>`;
- let h="";
+ const tabs=`<div class="mtabs"><button class="${SET.tab==="akun"?"on":""}" data-act="setTab" data-t="akun">👤 Akun</button>${sa?`<button class="${SET.tab==="md"?"on":""}" data-act="setTab" data-t="md">🗂 Master Data</button>`:""}<button class="${SET.tab==="notif"?"on":""}" data-act="setTab" data-t="notif">🔔 Notifikasi</button></div>`;
+ let h="";if(!sa&&SET.tab==="md")SET.tab="akun";
  if(SET.tab==="akun"){
   const row=(ic,l,v,lock,ed)=>`<div class="warow"><span class="waic">${ic}</span><div class="wat"><small>${l}</small><div>${v}</div></div>${ed||""}${lock?`<span class="walk" title="Tidak dapat diubah">🔒</span>`:""}</div>`;
   h=`<div class="wacard"><div class="wahead"><div class="waav">${ini(a.nama)}</div><div><b>${esc(a.nama)}</b><span>${esc(a.jab)}</span><span class="mut">${accUnitTxt(a)}</span></div></div>
